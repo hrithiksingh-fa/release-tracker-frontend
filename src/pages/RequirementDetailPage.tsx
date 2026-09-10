@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Plus, X } from "lucide-react";
+import { ArrowLeft, Plus, X, Frame } from "lucide-react";
+import { Button, IconButton } from "fieldassist-ui";
 import { requirementsApi } from "../api/resources.js";
 import type { RequirementRecord } from "../api/types.js";
 import { RequirementStatusBadge, ReleaseNoteStatusBadge } from "../components/StatusBadge.js";
@@ -91,6 +92,8 @@ export function RequirementDetailPage() {
         )}
       </section>
 
+      <FigmaReferencesSection requirement={requirement} onChange={reload} />
+
       <section>
         <h2 className="mb-3 text-sm font-semibold text-[#9aa1ac]">
           Release notes ({requirement.releaseNotes?.length ?? 0})
@@ -119,6 +122,101 @@ export function RequirementDetailPage() {
         )}
       </section>
     </div>
+  );
+}
+
+function FigmaReferencesSection({
+  requirement,
+  onChange,
+}: {
+  requirement: RequirementRecord;
+  onChange: () => void;
+}) {
+  const [showForm, setShowForm] = useState(false);
+  const [url, setUrl] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const references = requirement.figmaReferences ?? [];
+
+  async function attach() {
+    if (!url.trim()) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      await requirementsApi.attachFigmaLink(requirement.id, url.trim());
+      setUrl("");
+      setShowForm(false);
+      onChange();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to attach Figma link");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function remove(referenceId: string) {
+    await requirementsApi.removeFigmaLink(requirement.id, referenceId);
+    onChange();
+  }
+
+  return (
+    <section className="mb-8">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-[#9aa1ac]">Figma references ({references.length})</h2>
+        <Button size="mini" variant="grey-outline" leftIcon={<Frame size={14} />} onClick={() => setShowForm((v) => !v)}>
+          Attach design
+        </Button>
+      </div>
+
+      {showForm && (
+        <div className="mb-3 rounded-xl border border-[#2a2f3a] bg-[#1e2229] p-4">
+          <input
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="Paste a Figma file or frame URL"
+            className="w-full rounded-lg border border-[#2a2f3a] bg-[#171a21] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
+          />
+          {error && <p className="mt-2 text-xs text-[#e05a5a]">{error}</p>}
+          <div className="mt-3 flex justify-end gap-2">
+            <Button size="mini" variant="grey-outline" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+            <Button size="mini" onClick={attach} disabled={submitting}>
+              {submitting ? "Attaching…" : "Attach"}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {references.length === 0 ? (
+        <p className="text-sm text-[#9aa1ac]">No design references attached yet.</p>
+      ) : (
+        <div className="flex flex-wrap gap-3">
+          {references.map((ref) => (
+            <div key={ref.id} className="relative w-40 overflow-hidden rounded-xl border border-[#2a2f3a] bg-[#171a21]">
+              <IconButton
+                icon={<X size={12} />}
+                aria-label="Remove Figma reference"
+                size="xtiny"
+                shape="circle"
+                onClick={() => remove(ref.id)}
+                className="absolute right-1.5 top-1.5 z-10"
+              />
+              <a href={ref.url} target="_blank" rel="noopener noreferrer">
+                {ref.thumbnailUrl ? (
+                  <img src={ref.thumbnailUrl} alt={ref.fileName ?? "Figma file"} className="h-24 w-full object-cover" />
+                ) : (
+                  <div className="flex h-24 w-full items-center justify-center text-[#9aa1ac]">
+                    <Frame size={20} />
+                  </div>
+                )}
+                <div className="truncate px-2 py-1.5 text-xs text-[#9aa1ac]">{ref.fileName ?? ref.fileKey}</div>
+              </a>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

@@ -4,6 +4,7 @@ import type {
   TrackerRecord,
   RequirementRecord,
   LinkedWorkItemRecord,
+  FigmaReferenceRecord,
   ReleaseNoteRecord,
   ReleaseNoteStatus,
   SyncRunResult,
@@ -42,6 +43,10 @@ export const requirementsApi = {
     api.post<LinkedWorkItemRecord>(`/requirements/${requirementId}/linked-work-items`, data),
   unlink: (requirementId: string, linkedId: string) =>
     api.delete<void>(`/requirements/${requirementId}/linked-work-items/${linkedId}`),
+  attachFigmaLink: (requirementId: string, url: string) =>
+    api.post<FigmaReferenceRecord>(`/requirements/${requirementId}/figma-links`, { url }),
+  removeFigmaLink: (requirementId: string, referenceId: string) =>
+    api.delete<void>(`/requirements/${requirementId}/figma-links/${referenceId}`),
 };
 
 export const releaseNotesApi = {

@@ -36,6 +36,17 @@ export interface LinkedWorkItemRecord {
   lastSyncedAt: string | null;
 }
 
+export interface FigmaReferenceRecord {
+  id: string;
+  requirementId: string;
+  fileKey: string;
+  nodeId: string | null;
+  fileName: string | null;
+  url: string;
+  thumbnailUrl: string | null;
+  addedAt: string;
+}
+
 export type ReleaseNoteStatus = "DRAFT" | "APPROVED" | "SENT" | "FAILED";
 
 export interface ReleaseNoteRecord {
@@ -66,6 +77,7 @@ export interface RequirementRecord {
   updatedAt: string;
   linkedWorkItems: LinkedWorkItemRecord[];
   releaseNotes?: ReleaseNoteRecord[];
+  figmaReferences?: FigmaReferenceRecord[];
   tracker?: { client: ClientRecord };
 }
 

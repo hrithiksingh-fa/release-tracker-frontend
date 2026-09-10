@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "fieldassist-ui/styles/tokens.css";
+@source "../node_modules/fieldassist-ui/src";
 
 :root {
   color-scheme: dark;
