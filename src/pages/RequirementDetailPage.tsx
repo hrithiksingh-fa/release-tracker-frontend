@@ -4,17 +4,24 @@ import { ArrowLeft, Plus, X, Frame } from "lucide-react";
 import { Button, IconButton } from "fieldassist-ui";
 import { requirementsApi } from "../api/resources.js";
 import type { RequirementRecord } from "../api/types.js";
-import { RequirementStatusBadge, ReleaseNoteStatusBadge } from "../components/StatusBadge.js";
+import { StageBadge, ReleaseNoteStatusBadge } from "../components/StatusBadge.js";
 
 export function RequirementDetailPage() {
   const { requirementId } = useParams<{ requirementId: string }>();
   const [requirement, setRequirement] = useState<RequirementRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [linkMode, setLinkMode] = useState<"existing" | "new" | null>(null);
+  const [dueDate, setDueDate] = useState("");
 
   function reload() {
     if (!requirementId) return;
-    requirementsApi.get(requirementId).then(setRequirement).catch((err) => setError(err.message));
+    requirementsApi
+      .get(requirementId)
+      .then((r) => {
+        setRequirement(r);
+        setDueDate(r.dueDate ? r.dueDate.slice(0, 10) : "");
+      })
+      .catch((err) => setError(err.message));
   }
 
   useEffect(reload, [requirementId]);
@@ -25,7 +32,23 @@ export function RequirementDetailPage() {
     reload();
   }
 
+  async function moveStage(workflowStageId: string) {
+    if (!requirementId) return;
+    const result = await requirementsApi.moveStage(requirementId, workflowStageId);
+    if (result.releaseNoteWarning) setError(result.releaseNoteWarning);
+    else setError(null);
+    reload();
+  }
+
+  async function saveDueDate() {
+    if (!requirementId) return;
+    await requirementsApi.update(requirementId, { dueDate: dueDate ? new Date(dueDate).toISOString() : null });
+    reload();
+  }
+
   if (!requirement) return <div className="p-8 text-sm text-[#9aa1ac]">{error ?? "Loading…"}</div>;
+
+  const workflowStages = requirement.tracker?.client.requirementWorkflow?.stages ?? [];
 
   return (
     <div className="mx-auto max-w-3xl p-8">
@@ -35,9 +58,52 @@ export function RequirementDetailPage() {
 
       <div className="mb-1 flex items-center gap-3">
         <h1 className="text-xl font-semibold">{requirement.title}</h1>
-        <RequirementStatusBadge status={requirement.status} />
+        {requirement.stage && <StageBadge name={requirement.stage.stage.name} color={requirement.stage.stage.color} />}
       </div>
-      {requirement.description && <p className="mb-6 text-sm text-[#9aa1ac]">{requirement.description}</p>}
+      {requirement.description && <p className="mb-4 text-sm text-[#9aa1ac]">{requirement.description}</p>}
+
+      {error && (
+        <p className="mb-4 rounded-lg border border-[#e0a13a]/35 bg-[#e0a13a]/10 px-3 py-2 text-sm text-[#e0a13a]">
+          {error}
+        </p>
+      )}
+
+      <div className="mb-6 flex flex-wrap items-end gap-4">
+        {workflowStages.length > 0 && (
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-[#9aa1ac]">Stage</span>
+            <select
+              value={requirement.stageId ?? ""}
+              onChange={(e) => moveStage(e.target.value)}
+              className="rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
+            >
+              {workflowStages.map((ws) => (
+                <option key={ws.id} value={ws.id}>
+                  {ws.stage.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <label className="flex flex-col gap-1">
+          <span className="text-xs font-medium text-[#9aa1ac]">Due date</span>
+          <div className="flex gap-2">
+            <input
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
+              style={{ colorScheme: "dark" }}
+            />
+            <button
+              onClick={saveDueDate}
+              className="rounded-lg border border-[#2a2f3a] px-3 py-2 text-xs font-medium text-[#9aa1ac] hover:border-[#5b8cff] hover:text-white"
+            >
+              Save
+            </button>
+          </div>
+        </label>
+      </div>
 
       <section className="mb-8">
         <div className="mb-3 flex items-center justify-between">
@@ -68,7 +134,7 @@ export function RequirementDetailPage() {
 
         {requirement.linkedWorkItems.length === 0 ? (
           <p className="text-sm text-[#9aa1ac]">
-            No linked work items yet. This requirement stays "Not Started" until at least one is linked.
+            No linked work items yet.
           </p>
         ) : (
           <div className="divide-y divide-[#2a2f3a] rounded-xl border border-[#2a2f3a] bg-[#171a21]">
@@ -100,7 +166,7 @@ export function RequirementDetailPage() {
         </h2>
         {!requirement.releaseNotes?.length ? (
           <p className="text-sm text-[#9aa1ac]">
-            Generated automatically once every linked work item reaches a terminal state.
+            Generated automatically when this requirement is moved into a "Done"-flagged stage.
           </p>
         ) : (
           <div className="flex flex-col gap-3">

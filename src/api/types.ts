@@ -1,3 +1,30 @@
+export interface StageRecord {
+  id: string;
+  name: string;
+  color: string | null;
+  isDoneStage: boolean;
+}
+
+export type WorkflowScope = "PROJECT" | "REQUIREMENT";
+
+export interface WorkflowStageRecord {
+  id: string; // WorkflowStage id -- this is what Client.currentStageId / Requirement.stageId point at
+  workflowId: string;
+  stageId: string; // Stage id (the master record)
+  position: number;
+  stage: StageRecord;
+}
+
+export interface WorkflowRecord {
+  id: string;
+  name: string;
+  scope: WorkflowScope;
+  isTemplate: boolean;
+  ownerClientId: string | null;
+  stages: WorkflowStageRecord[];
+  ownerClient?: ClientRecord | null;
+}
+
 export interface ClientRecord {
   id: string;
   name: string;
@@ -8,6 +35,9 @@ export interface ClientRecord {
   adoAreaPath: string | null;
   adoDoneStates: string[];
   adoPatConfigured: boolean;
+  currentStageId: string | null;
+  currentStage?: WorkflowStageRecord | null;
+  requirementWorkflow?: WorkflowRecord | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -20,8 +50,6 @@ export interface TrackerRecord {
   updatedAt: string;
   _count?: { requirements: number };
 }
-
-export type RequirementStatus = "NOT_STARTED" | "IN_PROGRESS" | "DONE";
 
 export interface LinkedWorkItemRecord {
   id: string;
@@ -71,7 +99,9 @@ export interface RequirementRecord {
   trackerId: string;
   title: string;
   description: string | null;
-  status: RequirementStatus;
+  dueDate: string | null;
+  stageId: string | null;
+  stage?: WorkflowStageRecord | null;
   doneAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -85,6 +115,5 @@ export interface SyncRunResult {
   syncRunId: string;
   clientsSynced: number;
   linkedItemsUpdated: number;
-  requirementsCompleted: number;
   errors: string[];
 }

@@ -19,8 +19,7 @@ export function Layout() {
     try {
       const result = await syncApi.runNow();
       setLastResult(
-        `Synced ${result.clientsSynced} client(s), ${result.linkedItemsUpdated} item(s) updated, ` +
-          `${result.requirementsCompleted} requirement(s) completed.` +
+        `Synced ${result.clientsSynced} client(s), ${result.linkedItemsUpdated} item(s) updated.` +
           (result.errors.length ? ` ${result.errors.length} error(s).` : "")
       );
     } catch (err) {
