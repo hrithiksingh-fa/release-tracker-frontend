@@ -14,7 +14,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-table": "^8.20.5",
     "clsx": "^2.1.1",
-    "fieldassist-ui": "file:../fieldassist-ui",
+    "fieldassist-ui": "github:hrithiksingh-fa/fieldassist-ui#v0.1.0",
     "lucide-react": "^1.27.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
