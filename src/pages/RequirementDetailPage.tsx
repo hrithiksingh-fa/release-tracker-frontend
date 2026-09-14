@@ -1,27 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Plus, X, Frame } from "lucide-react";
+import { ArrowLeft, Plus, X, Frame, Pencil } from "lucide-react";
 import { Button, IconButton } from "fieldassist-ui";
 import { requirementsApi } from "../api/resources.js";
-import type { RequirementRecord } from "../api/types.js";
-import { StageBadge, ReleaseNoteStatusBadge } from "../components/StatusBadge.js";
+import type { RequirementRecord, RequirementPriority } from "../api/types.js";
+import { StageBadge, ReleaseNoteStatusBadge, PriorityBadge } from "../components/StatusBadge.js";
+import { TimelineButton, TimelinePanel } from "../components/Timeline.js";
 
 export function RequirementDetailPage() {
   const { requirementId } = useParams<{ requirementId: string }>();
   const [requirement, setRequirement] = useState<RequirementRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [linkMode, setLinkMode] = useState<"existing" | "new" | null>(null);
-  const [dueDate, setDueDate] = useState("");
+  const [showTimeline, setShowTimeline] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   function reload() {
     if (!requirementId) return;
-    requirementsApi
-      .get(requirementId)
-      .then((r) => {
-        setRequirement(r);
-        setDueDate(r.dueDate ? r.dueDate.slice(0, 10) : "");
-      })
-      .catch((err) => setError(err.message));
+    requirementsApi.get(requirementId).then(setRequirement).catch((err) => setError(err.message));
   }
 
   useEffect(reload, [requirementId]);
@@ -40,25 +36,31 @@ export function RequirementDetailPage() {
     reload();
   }
 
-  async function saveDueDate() {
-    if (!requirementId) return;
-    await requirementsApi.update(requirementId, { dueDate: dueDate ? new Date(dueDate).toISOString() : null });
-    reload();
-  }
-
   if (!requirement) return <div className="p-8 text-sm text-[#9aa1ac]">{error ?? "Loading…"}</div>;
 
-  const workflowStages = requirement.tracker?.client.requirementWorkflow?.stages ?? [];
+  const workflowStages = requirement.phase?.client.requirementWorkflow?.stages ?? [];
 
   return (
     <div className="mx-auto max-w-3xl p-8">
-      <Link to={`/trackers/${requirement.trackerId}`} className="mb-4 inline-flex items-center gap-1 text-sm text-[#9aa1ac] hover:text-white">
-        <ArrowLeft size={14} /> Back to tracker
+      <Link to={`/phases/${requirement.phaseId}`} className="mb-4 inline-flex items-center gap-1 text-sm text-[#9aa1ac] hover:text-white">
+        <ArrowLeft size={14} /> Back to phase
       </Link>
 
-      <div className="mb-1 flex items-center gap-3">
-        <h1 className="text-xl font-semibold">{requirement.title}</h1>
-        {requirement.stage && <StageBadge name={requirement.stage.stage.name} color={requirement.stage.stage.color} />}
+      <div className="mb-1 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-semibold">{requirement.title}</h1>
+          {requirement.stage && <StageBadge name={requirement.stage.stage.name} color={requirement.stage.stage.color} />}
+          <PriorityBadge priority={requirement.priority} />
+        </div>
+        <div className="flex gap-2">
+          <TimelineButton onClick={() => setShowTimeline(true)} />
+          <button
+            onClick={() => setEditing(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-[#2a2f3a] px-3 py-1.5 text-xs font-medium text-[#9aa1ac] hover:border-[#5b8cff] hover:text-white"
+          >
+            <Pencil size={14} /> Edit
+          </button>
+        </div>
       </div>
       {requirement.description && <p className="mb-4 text-sm text-[#9aa1ac]">{requirement.description}</p>}
 
@@ -85,37 +87,21 @@ export function RequirementDetailPage() {
             </select>
           </label>
         )}
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-[#9aa1ac]">Due date</span>
-          <div className="flex gap-2">
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className="rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
-              style={{ colorScheme: "dark" }}
-            />
-            <button
-              onClick={saveDueDate}
-              className="rounded-lg border border-[#2a2f3a] px-3 py-2 text-xs font-medium text-[#9aa1ac] hover:border-[#5b8cff] hover:text-white"
-            >
-              Save
-            </button>
-          </div>
-        </label>
+        <MetaField label="Delivery date" value={requirement.dueDate} />
+        <MetaField label="Revised delivery date" value={requirement.revisedDueDate} />
       </div>
 
       <section className="mb-8">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-[#9aa1ac]">
-            Linked ADO work items ({requirement.linkedWorkItems.length})
+            Linked PBIs ({requirement.linkedWorkItems.length})
           </h2>
           <div className="flex gap-2">
             <button onClick={() => setLinkMode("existing")} className="text-xs font-medium text-[#5b8cff] hover:underline">
               Link existing
             </button>
             <button onClick={() => setLinkMode("new")} className="text-xs font-medium text-[#5b8cff] hover:underline">
-              Create in ADO
+              Create PBI
             </button>
           </div>
         </div>
@@ -133,9 +119,7 @@ export function RequirementDetailPage() {
         )}
 
         {requirement.linkedWorkItems.length === 0 ? (
-          <p className="text-sm text-[#9aa1ac]">
-            No linked work items yet.
-          </p>
+          <p className="text-sm text-[#9aa1ac]">No linked PBIs yet.</p>
         ) : (
           <div className="divide-y divide-[#2a2f3a] rounded-xl border border-[#2a2f3a] bg-[#171a21]">
             {requirement.linkedWorkItems.map((li) => (
@@ -187,6 +171,116 @@ export function RequirementDetailPage() {
           </div>
         )}
       </section>
+
+      {editing && (
+        <EditRequirementModal
+          requirement={requirement}
+          onClose={() => setEditing(false)}
+          onSaved={() => {
+            setEditing(false);
+            reload();
+          }}
+        />
+      )}
+      {showTimeline && (
+        <TimelinePanel entityType="requirement" entityId={requirement.id} onClose={() => setShowTimeline(false)} />
+      )}
+    </div>
+  );
+}
+
+function MetaField({ label, value }: { label: string; value: string | null }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-xs font-medium text-[#9aa1ac]">{label}</span>
+      <span className="text-sm text-white">{value ? new Date(value).toLocaleDateString() : "—"}</span>
+    </div>
+  );
+}
+
+function EditRequirementModal({
+  requirement,
+  onClose,
+  onSaved,
+}: {
+  requirement: RequirementRecord;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [title, setTitle] = useState(requirement.title);
+  const [description, setDescription] = useState(requirement.description ?? "");
+  const [priority, setPriority] = useState<RequirementPriority>(requirement.priority);
+  const [dueDate, setDueDate] = useState(requirement.dueDate?.slice(0, 10) ?? "");
+  const [revisedDueDate, setRevisedDueDate] = useState(requirement.revisedDueDate?.slice(0, 10) ?? "");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    if (!title.trim()) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      await requirementsApi.update(requirement.id, {
+        title: title.trim(),
+        description: description.trim() || undefined,
+        priority,
+        dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+        revisedDueDate: revisedDueDate ? new Date(revisedDueDate).toISOString() : null,
+      });
+      onSaved();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save requirement");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const fieldClass =
+    "rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-[#2a2f3a] bg-[#171a21] p-6">
+        <h2 className="mb-4 text-base font-semibold text-white">Edit requirement</h2>
+        <div className="flex flex-col gap-3">
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-[#9aa1ac]">Title</span>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} className={fieldClass} />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-[#9aa1ac]">Description</span>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={fieldClass} />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-[#9aa1ac]">Priority</span>
+            <select value={priority} onChange={(e) => setPriority(e.target.value as RequirementPriority)} className={fieldClass}>
+              <option value="LOW">Low</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="HIGH">High</option>
+              <option value="URGENT">Urgent</option>
+            </select>
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-[#9aa1ac]">Delivery date</span>
+              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={fieldClass} style={{ colorScheme: "dark" }} />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-[#9aa1ac]">Revised delivery date</span>
+              <input type="date" value={revisedDueDate} onChange={(e) => setRevisedDueDate(e.target.value)} className={fieldClass} style={{ colorScheme: "dark" }} />
+            </label>
+          </div>
+        </div>
+        {error && <p className="mt-3 text-sm text-[#e05a5a]">{error}</p>}
+        <div className="mt-5 flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm text-[#9aa1ac] hover:text-white">
+            Cancel
+          </button>
+          <button onClick={submit} disabled={submitting || !title.trim()} className="rounded-lg bg-[#5b8cff] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
+            {submitting ? "Saving…" : "Save changes"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -309,7 +403,7 @@ function LinkWorkItemForm({
     try {
       if (mode === "existing") {
         const id = Number(adoId);
-        if (!id) throw new Error("Enter a valid ADO work item id.");
+        if (!id) throw new Error("Enter a valid PBI id.");
         await requirementsApi.linkExisting(requirementId, id);
       } else {
         if (!title.trim()) throw new Error("Title is required.");
@@ -329,7 +423,7 @@ function LinkWorkItemForm({
         <input
           value={adoId}
           onChange={(e) => setAdoId(e.target.value)}
-          placeholder="ADO work item id, e.g. 12345"
+          placeholder="PBI id, e.g. 12345"
           className="w-full rounded-lg border border-[#2a2f3a] bg-[#171a21] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
         />
       ) : (

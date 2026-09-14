@@ -5,10 +5,10 @@ export interface StageRecord {
   isDoneStage: boolean;
 }
 
-export type WorkflowScope = "PROJECT" | "REQUIREMENT";
+export type WorkflowScope = "CLIENT" | "PHASE" | "REQUIREMENT";
 
 export interface WorkflowStageRecord {
-  id: string; // WorkflowStage id -- this is what Client.currentStageId / Requirement.stageId point at
+  id: string; // WorkflowStage id -- this is what Client.currentStageId / Phase.stageId / Requirement.stageId point at
   workflowId: string;
   stageId: string; // Stage id (the master record)
   position: number;
@@ -20,14 +20,23 @@ export interface WorkflowRecord {
   name: string;
   scope: WorkflowScope;
   isTemplate: boolean;
-  ownerClientId: string | null;
   stages: WorkflowStageRecord[];
-  ownerClient?: ClientRecord | null;
+  clientUsingAsPhaseWorkflow?: ClientRecord | null;
+  clientUsingAsRequirementWorkflow?: ClientRecord | null;
+}
+
+export interface ModuleRecord {
+  id: string;
+  name: string;
+  description: string | null;
 }
 
 export interface ClientRecord {
   id: string;
   name: string;
+  description: string | null;
+  productOwner: string | null;
+  deliveryDate: string | null;
   slackChannelId: string | null;
   slackChannelName: string | null;
   adoOrgUrl: string | null;
@@ -37,18 +46,27 @@ export interface ClientRecord {
   adoPatConfigured: boolean;
   currentStageId: string | null;
   currentStage?: WorkflowStageRecord | null;
+  phaseWorkflowId: string | null;
+  phaseWorkflow?: WorkflowRecord | null;
+  requirementWorkflowId: string | null;
   requirementWorkflow?: WorkflowRecord | null;
+  modules?: ModuleRecord[];
   createdAt: string;
   updatedAt: string;
 }
 
-export interface TrackerRecord {
+export interface PhaseRecord {
   id: string;
   clientId: string;
   name: string;
+  description: string | null;
+  deliveryDate: string | null;
+  stageId: string | null;
+  stage?: WorkflowStageRecord | null;
   createdAt: string;
   updatedAt: string;
   _count?: { requirements: number };
+  client?: ClientRecord;
 }
 
 export interface LinkedWorkItemRecord {
@@ -94,12 +112,16 @@ export interface ReleaseNoteRecord {
   requirement?: RequirementRecord;
 }
 
+export type RequirementPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+
 export interface RequirementRecord {
   id: string;
-  trackerId: string;
+  phaseId: string;
   title: string;
   description: string | null;
+  priority: RequirementPriority;
   dueDate: string | null;
+  revisedDueDate: string | null;
   stageId: string | null;
   stage?: WorkflowStageRecord | null;
   doneAt: string | null;
@@ -108,7 +130,18 @@ export interface RequirementRecord {
   linkedWorkItems: LinkedWorkItemRecord[];
   releaseNotes?: ReleaseNoteRecord[];
   figmaReferences?: FigmaReferenceRecord[];
-  tracker?: { client: ClientRecord };
+  phase?: { client: ClientRecord };
+}
+
+export interface AuditLogRecord {
+  id: string;
+  entityType: string;
+  entityId: string;
+  field: string;
+  oldValue: string | null;
+  newValue: string | null;
+  actor: string;
+  occurredAt: string;
 }
 
 export interface SyncRunResult {

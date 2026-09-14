@@ -1,7 +1,7 @@
 import { api } from "./client.js";
 import type {
   ClientRecord,
-  TrackerRecord,
+  PhaseRecord,
   RequirementRecord,
   LinkedWorkItemRecord,
   FigmaReferenceRecord,
@@ -10,36 +10,59 @@ import type {
   StageRecord,
   WorkflowRecord,
   WorkflowScope,
+  ModuleRecord,
+  AuditLogRecord,
   SyncRunResult,
 } from "./types.js";
 
 export const clientsApi = {
   list: () => api.get<ClientRecord[]>("/clients"),
-  get: (id: string) => api.get<ClientRecord & { trackers: TrackerRecord[] }>(`/clients/${id}`),
-  create: (data: Partial<ClientRecord> & { name: string; adoPat?: string; cloneRequirementWorkflowFrom?: string }) =>
-    api.post<ClientRecord>("/clients", data),
-  update: (id: string, data: Partial<ClientRecord> & { adoPat?: string }) =>
+  get: (id: string) => api.get<ClientRecord & { phases: PhaseRecord[] }>(`/clients/${id}`),
+  create: (
+    data: Partial<ClientRecord> & {
+      name: string;
+      adoPat?: string;
+      moduleIds?: string[];
+      clonePhaseWorkflowFrom?: string;
+      cloneRequirementWorkflowFrom?: string;
+    }
+  ) => api.post<ClientRecord>("/clients", data),
+  update: (id: string, data: Partial<ClientRecord> & { adoPat?: string; moduleIds?: string[] }) =>
     api.patch<ClientRecord>(`/clients/${id}`, data),
   moveStage: (id: string, stageId: string) => api.patch<ClientRecord>(`/clients/${id}/stage`, { stageId }),
+  attachWorkflow: (id: string, scope: "PHASE" | "REQUIREMENT", workflowId: string) =>
+    api.patch<ClientRecord>(`/clients/${id}/workflows`, { scope, workflowId }),
   remove: (id: string) => api.delete<void>(`/clients/${id}`),
 };
 
-export const trackersApi = {
-  listForClient: (clientId: string) => api.get<TrackerRecord[]>(`/clients/${clientId}/trackers`),
-  create: (clientId: string, name: string) =>
-    api.post<TrackerRecord>(`/clients/${clientId}/trackers`, { name }),
-  get: (id: string) => api.get<TrackerRecord & { client: ClientRecord }>(`/trackers/${id}`),
-  remove: (id: string) => api.delete<void>(`/trackers/${id}`),
+export const phasesApi = {
+  listForClient: (clientId: string) => api.get<PhaseRecord[]>(`/clients/${clientId}/phases`),
+  create: (clientId: string, data: { name: string; description?: string; deliveryDate?: string }) =>
+    api.post<PhaseRecord>(`/clients/${clientId}/phases`, data),
+  get: (id: string) => api.get<PhaseRecord & { client: ClientRecord }>(`/phases/${id}`),
+  update: (id: string, data: { name?: string; description?: string; deliveryDate?: string | null }) =>
+    api.patch<PhaseRecord>(`/phases/${id}`, data),
+  moveStage: (id: string, stageId: string) => api.patch<PhaseRecord>(`/phases/${id}/stage`, { stageId }),
+  remove: (id: string) => api.delete<void>(`/phases/${id}`),
 };
 
 export const requirementsApi = {
-  listForTracker: (trackerId: string) =>
-    api.get<RequirementRecord[]>(`/trackers/${trackerId}/requirements`),
-  create: (trackerId: string, data: { title: string; description?: string; dueDate?: string }) =>
-    api.post<RequirementRecord>(`/trackers/${trackerId}/requirements`, data),
+  listForPhase: (phaseId: string) => api.get<RequirementRecord[]>(`/phases/${phaseId}/requirements`),
+  create: (
+    phaseId: string,
+    data: { title: string; description?: string; priority?: string; dueDate?: string; revisedDueDate?: string }
+  ) => api.post<RequirementRecord>(`/phases/${phaseId}/requirements`, data),
   get: (id: string) => api.get<RequirementRecord>(`/requirements/${id}`),
-  update: (id: string, data: { title?: string; description?: string; dueDate?: string | null }) =>
-    api.patch<RequirementRecord>(`/requirements/${id}`, data),
+  update: (
+    id: string,
+    data: {
+      title?: string;
+      description?: string;
+      priority?: string;
+      dueDate?: string | null;
+      revisedDueDate?: string | null;
+    }
+  ) => api.patch<RequirementRecord>(`/requirements/${id}`, data),
   moveStage: (id: string, stageId: string) =>
     api.patch<RequirementRecord & { releaseNoteWarning: string | null }>(`/requirements/${id}/stage`, { stageId }),
   remove: (id: string) => api.delete<void>(`/requirements/${id}`),
@@ -82,12 +105,28 @@ export const stagesApi = {
 export const workflowsApi = {
   list: (scope?: WorkflowScope) => api.get<WorkflowRecord[]>(`/workflows${scope ? `?scope=${scope}` : ""}`),
   get: (id: string) => api.get<WorkflowRecord>(`/workflows/${id}`),
-  clone: (id: string, data: { name: string; ownerClientId?: string; isTemplate?: boolean }) =>
+  create: (data: { name: string; scope: WorkflowScope; isTemplate?: boolean }) =>
+    api.post<WorkflowRecord>("/workflows", data),
+  clone: (id: string, data: { name: string; isTemplate?: boolean }) =>
     api.post<WorkflowRecord>(`/workflows/${id}/clone`, data),
+  remove: (id: string) => api.delete<void>(`/workflows/${id}`),
   addStage: (id: string, data: { stageId: string; position?: number }) =>
     api.post(`/workflows/${id}/stages`, data),
   removeStage: (id: string, workflowStageId: string) =>
     api.delete<void>(`/workflows/${id}/stages/${workflowStageId}`),
   reorderStages: (id: string, orderedWorkflowStageIds: string[]) =>
     api.put<WorkflowRecord>(`/workflows/${id}/stages/reorder`, { orderedWorkflowStageIds }),
+};
+
+export const modulesApi = {
+  list: () => api.get<ModuleRecord[]>("/modules"),
+  create: (data: { name: string; description?: string }) => api.post<ModuleRecord>("/modules", data),
+  update: (id: string, data: { name?: string; description?: string }) =>
+    api.patch<ModuleRecord>(`/modules/${id}`, data),
+  remove: (id: string) => api.delete<void>(`/modules/${id}`),
+};
+
+export const auditLogsApi = {
+  list: (entityType: string, entityId: string) =>
+    api.get<AuditLogRecord[]>(`/audit-logs?entityType=${entityType}&entityId=${entityId}`),
 };

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Plus, List, LayoutGrid } from "lucide-react";
+import { ArrowLeft, Plus, List, LayoutGrid, Pencil } from "lucide-react";
 import {
   createColumnHelper,
   flexRender,
@@ -9,40 +9,51 @@ import {
   useReactTable,
   type SortingState,
 } from "@tanstack/react-table";
-import { requirementsApi, trackersApi } from "../api/resources.js";
-import type { RequirementRecord, TrackerRecord, ClientRecord } from "../api/types.js";
-import { StageBadge, ReleaseNoteStatusBadge } from "../components/StatusBadge.js";
+import { requirementsApi, phasesApi } from "../api/resources.js";
+import type { RequirementRecord, PhaseRecord, ClientRecord, RequirementPriority } from "../api/types.js";
+import { StageBadge, ReleaseNoteStatusBadge, PriorityBadge } from "../components/StatusBadge.js";
 import { KanbanBoard } from "../components/KanbanBoard.js";
+import { TimelineButton, TimelinePanel } from "../components/Timeline.js";
 
 type ViewMode = "list" | "board";
 
 const columnHelper = createColumnHelper<RequirementRecord>();
 
-export function TrackerGridPage() {
-  const { trackerId } = useParams<{ trackerId: string }>();
+export function PhaseDetailPage() {
+  const { phaseId } = useParams<{ phaseId: string }>();
   const navigate = useNavigate();
-  const [tracker, setTracker] = useState<(TrackerRecord & { client: ClientRecord }) | null>(null);
+  const [phase, setPhase] = useState<(PhaseRecord & { client: ClientRecord }) | null>(null);
   const [requirements, setRequirements] = useState<RequirementRecord[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [newTitle, setNewTitle] = useState("");
+  const [newPriority, setNewPriority] = useState<RequirementPriority>("MEDIUM");
+  const [newDueDate, setNewDueDate] = useState("");
   const [creating, setCreating] = useState(false);
   const [view, setView] = useState<ViewMode>("board");
   const [error, setError] = useState<string | null>(null);
+  const [showEditPhase, setShowEditPhase] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
 
   function reload() {
-    if (!trackerId) return;
-    trackersApi.get(trackerId).then(setTracker);
-    requirementsApi.listForTracker(trackerId).then(setRequirements);
+    if (!phaseId) return;
+    phasesApi.get(phaseId).then(setPhase);
+    requirementsApi.listForPhase(phaseId).then(setRequirements);
   }
 
-  useEffect(reload, [trackerId]);
+  useEffect(reload, [phaseId]);
 
   async function addRequirement() {
-    if (!trackerId || !newTitle.trim()) return;
+    if (!phaseId || !newTitle.trim()) return;
     setCreating(true);
     try {
-      await requirementsApi.create(trackerId, { title: newTitle.trim() });
+      await requirementsApi.create(phaseId, {
+        title: newTitle.trim(),
+        priority: newPriority,
+        dueDate: newDueDate ? new Date(newDueDate).toISOString() : undefined,
+      });
       setNewTitle("");
+      setNewDueDate("");
+      setNewPriority("MEDIUM");
       reload();
     } finally {
       setCreating(false);
@@ -69,6 +80,10 @@ export function TrackerGridPage() {
         header: "Requirement",
         cell: (info) => <span className="font-medium text-white">{info.getValue()}</span>,
       }),
+      columnHelper.accessor("priority", {
+        header: "Priority",
+        cell: (info) => <PriorityBadge priority={info.getValue()} />,
+      }),
       columnHelper.accessor((r) => r.stage, {
         id: "stage",
         header: "Stage",
@@ -84,9 +99,16 @@ export function TrackerGridPage() {
           return v ? new Date(v).toLocaleDateString() : <span className="text-[#9aa1ac]">—</span>;
         },
       }),
+      columnHelper.accessor("revisedDueDate", {
+        header: "Revised due",
+        cell: (info) => {
+          const v = info.getValue();
+          return v ? new Date(v).toLocaleDateString() : <span className="text-[#9aa1ac]">—</span>;
+        },
+      }),
       columnHelper.accessor((r) => r.linkedWorkItems, {
         id: "linkedWorkItems",
-        header: "ADO work items",
+        header: "PBIs",
         cell: (info) => {
           const items = info.getValue();
           if (!items.length) return <span className="text-[#9aa1ac]">None linked</span>;
@@ -105,10 +127,6 @@ export function TrackerGridPage() {
           return note ? <ReleaseNoteStatusBadge status={note.status} /> : <span className="text-[#9aa1ac]">—</span>;
         },
       }),
-      columnHelper.accessor("createdAt", {
-        header: "Created",
-        cell: (info) => new Date(info.getValue()).toLocaleDateString(),
-      }),
     ],
     []
   );
@@ -122,23 +140,34 @@ export function TrackerGridPage() {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  if (!tracker) return <div className="p-8 text-sm text-[#9aa1ac]">Loading…</div>;
+  if (!phase) return <div className="p-8 text-sm text-[#9aa1ac]">Loading…</div>;
 
-  const workflowStages = tracker.client.requirementWorkflow?.stages ?? [];
+  const workflowStages = phase.client.requirementWorkflow?.stages ?? [];
 
   return (
     <div className="mx-auto max-w-6xl p-8">
       <Link
-        to={`/clients/${tracker.clientId}`}
+        to={`/clients/${phase.clientId}`}
         className="mb-4 inline-flex items-center gap-1 text-sm text-[#9aa1ac] hover:text-white"
       >
-        <ArrowLeft size={14} /> {tracker.client.name}
+        <ArrowLeft size={14} /> {phase.client.name}
       </Link>
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">{tracker.name}</h1>
-        <ViewToggle view={view} onChange={setView} />
+        <h1 className="text-xl font-semibold">{phase.name}</h1>
+        <div className="flex items-center gap-2">
+          <TimelineButton onClick={() => setShowTimeline(true)} />
+          <button
+            onClick={() => setShowEditPhase(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-[#2a2f3a] px-3 py-1.5 text-xs font-medium text-[#9aa1ac] hover:border-[#5b8cff] hover:text-white"
+          >
+            <Pencil size={14} /> Edit
+          </button>
+          <ViewToggle view={view} onChange={setView} />
+        </div>
       </div>
+      {phase.description && <p className="mb-2 text-sm text-[#9aa1ac]">{phase.description}</p>}
       <p className="mb-6 text-sm text-[#9aa1ac]">
+        {phase.deliveryDate && <>Delivery: {new Date(phase.deliveryDate).toLocaleDateString()} · </>}
         Stages move manually (drag on the board, or from the requirement page). Moving into a "Done"-flagged stage
         generates a release note draft.
       </p>
@@ -149,13 +178,30 @@ export function TrackerGridPage() {
         </p>
       )}
 
-      <div className="mb-4 flex gap-2">
+      <div className="mb-4 flex flex-wrap gap-2">
         <input
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
           placeholder="New requirement title"
-          className="flex-1 rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
+          className="min-w-[200px] flex-1 rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
           onKeyDown={(e) => e.key === "Enter" && addRequirement()}
+        />
+        <select
+          value={newPriority}
+          onChange={(e) => setNewPriority(e.target.value as RequirementPriority)}
+          className="rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
+        >
+          <option value="LOW">Low</option>
+          <option value="MEDIUM">Medium</option>
+          <option value="HIGH">High</option>
+          <option value="URGENT">Urgent</option>
+        </select>
+        <input
+          type="date"
+          value={newDueDate}
+          onChange={(e) => setNewDueDate(e.target.value)}
+          className="rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
+          style={{ colorScheme: "dark" }}
         />
         <button
           onClick={addRequirement}
@@ -175,10 +221,13 @@ export function TrackerGridPage() {
             onMove={moveRequirementStage}
             renderCard={(r) => (
               <div onClick={() => navigate(`/requirements/${r.id}`)}>
-                <div className="text-sm font-medium text-white">{r.title}</div>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="text-sm font-medium text-white">{r.title}</div>
+                  <PriorityBadge priority={r.priority} />
+                </div>
                 <div className="mt-1 flex items-center gap-2 text-xs text-[#9aa1ac]">
                   {r.dueDate && <span>Due {new Date(r.dueDate).toLocaleDateString()}</span>}
-                  {r.linkedWorkItems.length > 0 && <span>{r.linkedWorkItems.length} linked</span>}
+                  {r.linkedWorkItems.length > 0 && <span>{r.linkedWorkItems.length} PBI(s)</span>}
                 </div>
               </div>
             )}
@@ -230,6 +279,18 @@ export function TrackerGridPage() {
           </table>
         </div>
       )}
+
+      {showEditPhase && (
+        <EditPhaseModal
+          phase={phase}
+          onClose={() => setShowEditPhase(false)}
+          onSaved={() => {
+            setShowEditPhase(false);
+            reload();
+          }}
+        />
+      )}
+      {showTimeline && <TimelinePanel entityType="phase" entityId={phase.id} onClose={() => setShowTimeline(false)} />}
     </div>
   );
 }
@@ -253,6 +314,71 @@ function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode
       >
         <List size={14} /> List
       </button>
+    </div>
+  );
+}
+
+function EditPhaseModal({
+  phase,
+  onClose,
+  onSaved,
+}: {
+  phase: PhaseRecord;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [name, setName] = useState(phase.name);
+  const [description, setDescription] = useState(phase.description ?? "");
+  const [deliveryDate, setDeliveryDate] = useState(phase.deliveryDate?.slice(0, 10) ?? "");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    if (!name.trim()) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      await phasesApi.update(phase.id, {
+        name: name.trim(),
+        description: description.trim() || undefined,
+        deliveryDate: deliveryDate ? new Date(deliveryDate).toISOString() : null,
+      });
+      onSaved();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save phase");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-md rounded-xl border border-[#2a2f3a] bg-[#171a21] p-6">
+        <h2 className="mb-4 text-base font-semibold text-white">Edit phase</h2>
+        <div className="flex flex-col gap-3">
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-[#9aa1ac]">Name</span>
+            <input value={name} onChange={(e) => setName(e.target.value)} className="rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]" />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-[#9aa1ac]">What this phase is about</span>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]" />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-[#9aa1ac]">Delivery date</span>
+            <input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} className="rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]" style={{ colorScheme: "dark" }} />
+          </label>
+        </div>
+        {error && <p className="mt-3 text-sm text-[#e05a5a]">{error}</p>}
+        <div className="mt-5 flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm text-[#9aa1ac] hover:text-white">
+            Cancel
+          </button>
+          <button onClick={submit} disabled={submitting || !name.trim()} className="rounded-lg bg-[#5b8cff] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
+            {submitting ? "Saving…" : "Save changes"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

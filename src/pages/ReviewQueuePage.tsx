@@ -112,8 +112,8 @@ function NoteEditor({ note, onChange }: { note: ReleaseNoteRecord; onChange: () 
         <ReleaseNoteStatusBadge status={note.status} />
       </div>
       <p className="mb-6 text-xs text-[#9aa1ac]">
-        Going to Slack channel #{note.requirement?.tracker?.client?.slackChannelName ?? "(none configured)"} for{" "}
-        {note.requirement?.tracker?.client?.name}
+        Going to Slack channel #{note.requirement?.phase?.client?.slackChannelName ?? "(none configured)"} for{" "}
+        {note.requirement?.phase?.client?.name}
       </p>
 
       <TextField label="Problem statement" value={problemStatement} onChange={setProblemStatement} rows={3} />
