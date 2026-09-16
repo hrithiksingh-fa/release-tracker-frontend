@@ -1,9 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Plus, Trash2, ArrowUp, ArrowDown, Link2 } from "lucide-react";
-import { stagesApi, workflowsApi, modulesApi, clientsApi } from "../api/resources.js";
-import type { StageRecord, WorkflowRecord, WorkflowScope, ModuleRecord, ClientRecord } from "../api/types.js";
+import { stagesApi, workflowsApi, modulesApi, categoriesApi, clientsApi } from "../api/resources.js";
+import type { StageRecord, WorkflowRecord, WorkflowScope, ModuleRecord, CategoryRecord, ClientRecord } from "../api/types.js";
 
-type Tab = "stages" | "workflows" | "modules";
+type Tab = "stages" | "workflows" | "modules" | "categories";
 
 export function AdminPage() {
   const [tab, setTab] = useState<Tab>("workflows");
@@ -12,11 +12,11 @@ export function AdminPage() {
     <div className="mx-auto max-w-5xl p-8">
       <h1 className="mb-1 text-xl font-semibold">Settings</h1>
       <p className="mb-6 text-sm text-[#9aa1ac]">
-        Manage the shared Stage master, the workflows built from it, and the module list clients pick from.
+        Manage the shared Stage master, the workflows built from it, the module list, and requirement categories.
       </p>
 
       <div className="mb-6 flex gap-2 border-b border-[#2a2f3a]">
-        {(["workflows", "stages", "modules"] as Tab[]).map((t) => (
+        {(["workflows", "stages", "modules", "categories"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -32,6 +32,7 @@ export function AdminPage() {
       {tab === "stages" && <StagesTab />}
       {tab === "workflows" && <WorkflowsTab />}
       {tab === "modules" && <ModulesTab />}
+      {tab === "categories" && <CategoriesTab />}
     </div>
   );
 }
@@ -439,6 +440,82 @@ function ModulesTab() {
           </div>
         ))}
         {modules.length === 0 && <p className="px-4 py-6 text-center text-sm text-[#9aa1ac]">No modules yet.</p>}
+      </div>
+    </div>
+  );
+}
+
+// --- Categories ----------------------------------------------------------------
+
+function CategoriesTab() {
+  const [categories, setCategories] = useState<CategoryRecord[]>([]);
+  const [name, setName] = useState("");
+  const [showByDefault, setShowByDefault] = useState(true);
+
+  function reload() {
+    categoriesApi.list().then(setCategories);
+  }
+  useEffect(reload, []);
+
+  async function create() {
+    if (!name.trim()) return;
+    await categoriesApi.create({ name: name.trim(), showByDefault });
+    setName("");
+    setShowByDefault(true);
+    reload();
+  }
+
+  async function toggle(c: CategoryRecord) {
+    await categoriesApi.update(c.id, { showByDefault: !c.showByDefault });
+    reload();
+  }
+
+  async function remove(id: string) {
+    await categoriesApi.remove(id);
+    reload();
+  }
+
+  return (
+    <div>
+      <p className="mb-4 text-xs text-[#9aa1ac]">
+        Requirement classification (default: Feasible / Not Feasible). Categories with "show by default" off are
+        hidden from a phase's requirement list/board until the viewer switches on "show not feasible".
+      </p>
+      <div className="mb-4 flex flex-wrap items-end gap-2 rounded-xl border border-[#2a2f3a] bg-[#171a21] p-3">
+        <Field label="Name">
+          <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} placeholder="e.g. On Hold" />
+        </Field>
+        <label className="mb-0.5 flex items-center gap-2 pb-2 text-sm text-[#9aa1ac]">
+          <input type="checkbox" checked={showByDefault} onChange={(e) => setShowByDefault(e.target.checked)} />
+          Show by default
+        </label>
+        <button onClick={create} disabled={!name.trim()} className="flex items-center gap-1.5 rounded-lg bg-[#5b8cff] px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
+          <Plus size={16} /> Add category
+        </button>
+      </div>
+
+      <div className="divide-y divide-[#2a2f3a] rounded-xl border border-[#2a2f3a] bg-[#171a21]">
+        {categories.map((c) => (
+          <div key={c.id} className="flex items-center justify-between px-4 py-3">
+            <div className="text-sm font-medium text-white">{c.name}</div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => toggle(c)}
+                className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+                  c.showByDefault
+                    ? "border-[#33c17a]/35 bg-[#33c17a]/15 text-[#33c17a]"
+                    : "border-[#2a2f3a] text-[#9aa1ac]"
+                }`}
+              >
+                {c.showByDefault ? "Shown by default" : "Hidden by default"}
+              </button>
+              <button onClick={() => remove(c.id)} className="text-[#9aa1ac] hover:text-[#e05a5a]">
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </div>
+        ))}
+        {categories.length === 0 && <p className="px-4 py-6 text-center text-sm text-[#9aa1ac]">No categories yet.</p>}
       </div>
     </div>
   );

@@ -20,9 +20,7 @@ export function ClientFormModal({
   const [deliveryDate, setDeliveryDate] = useState(client?.deliveryDate?.slice(0, 10) ?? "");
   const [slackChannelId, setSlackChannelId] = useState(client?.slackChannelId ?? "");
   const [slackChannelName, setSlackChannelName] = useState(client?.slackChannelName ?? "");
-  const [adoOrgUrl, setAdoOrgUrl] = useState(client?.adoOrgUrl ?? "");
-  const [adoProject, setAdoProject] = useState(client?.adoProject ?? "");
-  const [adoAreaPath, setAdoAreaPath] = useState(client?.adoAreaPath ?? "");
+  const [adoProjectUrl, setAdoProjectUrl] = useState(client?.adoProjectUrl ?? "");
   const [adoPat, setAdoPat] = useState("");
   const [modules, setModules] = useState<ModuleRecord[]>([]);
   const [selectedModuleIds, setSelectedModuleIds] = useState<Set<string>>(
@@ -56,9 +54,7 @@ export function ClientFormModal({
         deliveryDate: deliveryDate ? new Date(deliveryDate).toISOString() : undefined,
         slackChannelId: slackChannelId.trim() || undefined,
         slackChannelName: slackChannelName.trim() || undefined,
-        adoOrgUrl: adoOrgUrl.trim() || undefined,
-        adoProject: adoProject.trim() || undefined,
-        adoAreaPath: adoAreaPath.trim() || undefined,
+        adoProjectUrl: adoProjectUrl.trim() || undefined,
         adoPat: adoPat.trim() || undefined,
         moduleIds: Array.from(selectedModuleIds),
       };
@@ -129,17 +125,14 @@ export function ClientFormModal({
               <input value={slackChannelName} onChange={(e) => setSlackChannelName(e.target.value)} className={inputClass} placeholder="acme-releases" />
             </Field>
           </div>
-          <Field label="ADO org URL">
-            <input value={adoOrgUrl} onChange={(e) => setAdoOrgUrl(e.target.value)} className={inputClass} placeholder="https://dev.azure.com/myorg" />
+          <Field label="ADO project URL">
+            <input
+              value={adoProjectUrl}
+              onChange={(e) => setAdoProjectUrl(e.target.value)}
+              className={inputClass}
+              placeholder="https://dev.azure.com/myorg/myproject"
+            />
           </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="ADO project">
-              <input value={adoProject} onChange={(e) => setAdoProject(e.target.value)} className={inputClass} />
-            </Field>
-            <Field label="ADO area path">
-              <input value={adoAreaPath} onChange={(e) => setAdoAreaPath(e.target.value)} className={inputClass} />
-            </Field>
-          </div>
           <Field label={isEdit ? "ADO PAT (leave blank to keep current)" : "ADO PAT"}>
             <input type="password" value={adoPat} onChange={(e) => setAdoPat(e.target.value)} className={inputClass} />
           </Field>

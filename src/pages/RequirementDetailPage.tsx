@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Plus, X, Frame, Pencil } from "lucide-react";
+import { ArrowLeft, Plus, X, Frame, Pencil, Send } from "lucide-react";
 import { Button, IconButton } from "fieldassist-ui";
 import { requirementsApi } from "../api/resources.js";
-import type { RequirementRecord, RequirementPriority } from "../api/types.js";
+import type { RequirementRecord } from "../api/types.js";
 import { StageBadge, ReleaseNoteStatusBadge, PriorityBadge } from "../components/StatusBadge.js";
 import { TimelineButton, TimelinePanel } from "../components/Timeline.js";
+import { RequirementFormModal } from "../components/RequirementFormModal.js";
 
 export function RequirementDetailPage() {
   const { requirementId } = useParams<{ requirementId: string }>();
@@ -70,7 +71,7 @@ export function RequirementDetailPage() {
         </p>
       )}
 
-      <div className="mb-6 flex flex-wrap items-end gap-4">
+      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
         {workflowStages.length > 0 && (
           <label className="flex flex-col gap-1">
             <span className="text-xs font-medium text-[#9aa1ac]">Stage</span>
@@ -87,9 +88,33 @@ export function RequirementDetailPage() {
             </select>
           </label>
         )}
-        <MetaField label="Delivery date" value={requirement.dueDate} />
-        <MetaField label="Revised delivery date" value={requirement.revisedDueDate} />
+        <MetaField label="Delivery date" value={requirement.deliveryDate ? new Date(requirement.deliveryDate).toLocaleDateString() : null} />
+        <MetaField label="Module" value={requirement.module?.name ?? null} />
+        <MetaField label="Category" value={requirement.category?.name ?? null} />
+        <MetaField label="Product owner" value={requirement.productOwner} />
+        <MetaField
+          label="Asana"
+          value={requirement.asanaLink}
+          href={requirement.asanaLink ?? undefined}
+        />
       </div>
+
+      {(requirement.releaseNotesText || requirement.generalRemarks) && (
+        <div className="mb-6 flex flex-col gap-3">
+          {requirement.releaseNotesText && (
+            <div>
+              <div className="text-xs font-medium text-[#9aa1ac]">Release notes</div>
+              <p className="mt-0.5 text-sm text-white">{requirement.releaseNotesText}</p>
+            </div>
+          )}
+          {requirement.generalRemarks && (
+            <div>
+              <div className="text-xs font-medium text-[#9aa1ac]">General remarks</div>
+              <p className="mt-0.5 text-sm text-white">{requirement.generalRemarks}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       <section className="mb-8">
         <div className="mb-3 flex items-center justify-between">
@@ -144,7 +169,7 @@ export function RequirementDetailPage() {
 
       <FigmaReferencesSection requirement={requirement} onChange={reload} />
 
-      <section>
+      <section className="mb-8">
         <h2 className="mb-3 text-sm font-semibold text-[#9aa1ac]">
           Release notes ({requirement.releaseNotes?.length ?? 0})
         </h2>
@@ -172,9 +197,12 @@ export function RequirementDetailPage() {
         )}
       </section>
 
+      <CommentsSection requirement={requirement} onChange={reload} />
+
       {editing && (
-        <EditRequirementModal
+        <RequirementFormModal
           requirement={requirement}
+          phaseId={requirement.phaseId}
           onClose={() => setEditing(false)}
           onSaved={() => {
             setEditing(false);
@@ -189,99 +217,74 @@ export function RequirementDetailPage() {
   );
 }
 
-function MetaField({ label, value }: { label: string; value: string | null }) {
+function MetaField({ label, value, href }: { label: string; value: string | null; href?: string }) {
   return (
     <div className="flex flex-col gap-1">
       <span className="text-xs font-medium text-[#9aa1ac]">{label}</span>
-      <span className="text-sm text-white">{value ? new Date(value).toLocaleDateString() : "—"}</span>
+      {value && href ? (
+        <a href={href} target="_blank" rel="noopener noreferrer" className="truncate text-sm text-[#5b8cff] hover:underline">
+          Open
+        </a>
+      ) : (
+        <span className="text-sm text-white">{value ?? "—"}</span>
+      )}
     </div>
   );
 }
 
-function EditRequirementModal({
-  requirement,
-  onClose,
-  onSaved,
-}: {
-  requirement: RequirementRecord;
-  onClose: () => void;
-  onSaved: () => void;
-}) {
-  const [title, setTitle] = useState(requirement.title);
-  const [description, setDescription] = useState(requirement.description ?? "");
-  const [priority, setPriority] = useState<RequirementPriority>(requirement.priority);
-  const [dueDate, setDueDate] = useState(requirement.dueDate?.slice(0, 10) ?? "");
-  const [revisedDueDate, setRevisedDueDate] = useState(requirement.revisedDueDate?.slice(0, 10) ?? "");
+// Jira-style comment thread -- unlimited remarks, shown below the
+// description/metadata. Each addition also lands in the audit Timeline.
+function CommentsSection({ requirement, onChange }: { requirement: RequirementRecord; onChange: () => void }) {
+  const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const comments = requirement.comments ?? [];
 
   async function submit() {
-    if (!title.trim()) return;
+    if (!body.trim()) return;
     setSubmitting(true);
-    setError(null);
     try {
-      await requirementsApi.update(requirement.id, {
-        title: title.trim(),
-        description: description.trim() || undefined,
-        priority,
-        dueDate: dueDate ? new Date(dueDate).toISOString() : null,
-        revisedDueDate: revisedDueDate ? new Date(revisedDueDate).toISOString() : null,
-      });
-      onSaved();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save requirement");
+      await requirementsApi.addComment(requirement.id, body.trim());
+      setBody("");
+      onChange();
     } finally {
       setSubmitting(false);
     }
   }
 
-  const fieldClass =
-    "rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]";
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-[#2a2f3a] bg-[#171a21] p-6">
-        <h2 className="mb-4 text-base font-semibold text-white">Edit requirement</h2>
-        <div className="flex flex-col gap-3">
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-[#9aa1ac]">Title</span>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} className={fieldClass} />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-[#9aa1ac]">Description</span>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={fieldClass} />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-[#9aa1ac]">Priority</span>
-            <select value={priority} onChange={(e) => setPriority(e.target.value as RequirementPriority)} className={fieldClass}>
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
-              <option value="URGENT">Urgent</option>
-            </select>
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-[#9aa1ac]">Delivery date</span>
-              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={fieldClass} style={{ colorScheme: "dark" }} />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-[#9aa1ac]">Revised delivery date</span>
-              <input type="date" value={revisedDueDate} onChange={(e) => setRevisedDueDate(e.target.value)} className={fieldClass} style={{ colorScheme: "dark" }} />
-            </label>
-          </div>
-        </div>
-        {error && <p className="mt-3 text-sm text-[#e05a5a]">{error}</p>}
-        <div className="mt-5 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm text-[#9aa1ac] hover:text-white">
-            Cancel
-          </button>
-          <button onClick={submit} disabled={submitting || !title.trim()} className="rounded-lg bg-[#5b8cff] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
-            {submitting ? "Saving…" : "Save changes"}
-          </button>
-        </div>
+    <section>
+      <h2 className="mb-3 text-sm font-semibold text-[#9aa1ac]">Comments ({comments.length})</h2>
+      <div className="mb-4 flex gap-2">
+        <textarea
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          placeholder="Add a remark…"
+          rows={2}
+          className="flex-1 rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
+        />
+        <button
+          onClick={submit}
+          disabled={submitting || !body.trim()}
+          className="flex h-fit items-center gap-1.5 rounded-lg bg-[#5b8cff] px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+        >
+          <Send size={14} />
+        </button>
       </div>
-    </div>
+      {comments.length === 0 ? (
+        <p className="text-sm text-[#9aa1ac]">No remarks yet.</p>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {comments.map((c) => (
+            <div key={c.id} className="rounded-xl border border-[#2a2f3a] bg-[#171a21] p-3">
+              <div className="mb-1 text-xs text-[#9aa1ac]">
+                {c.author} · {new Date(c.createdAt).toLocaleString()}
+              </div>
+              <p className="text-sm text-white">{c.body}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

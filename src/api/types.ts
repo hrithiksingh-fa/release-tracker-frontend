@@ -31,6 +31,12 @@ export interface ModuleRecord {
   description: string | null;
 }
 
+export interface CategoryRecord {
+  id: string;
+  name: string;
+  showByDefault: boolean;
+}
+
 export interface ClientRecord {
   id: string;
   name: string;
@@ -39,9 +45,7 @@ export interface ClientRecord {
   deliveryDate: string | null;
   slackChannelId: string | null;
   slackChannelName: string | null;
-  adoOrgUrl: string | null;
-  adoProject: string | null;
-  adoAreaPath: string | null;
+  adoProjectUrl: string | null;
   adoDoneStates: string[];
   adoPatConfigured: boolean;
   currentStageId: string | null;
@@ -93,6 +97,14 @@ export interface FigmaReferenceRecord {
   addedAt: string;
 }
 
+export interface CommentRecord {
+  id: string;
+  requirementId: string;
+  body: string;
+  author: string;
+  createdAt: string;
+}
+
 export type ReleaseNoteStatus = "DRAFT" | "APPROVED" | "SENT" | "FAILED";
 
 export interface ReleaseNoteRecord {
@@ -100,7 +112,7 @@ export interface ReleaseNoteRecord {
   requirementId: string;
   version: number;
   status: ReleaseNoteStatus;
-  category: string | null;
+  category: string | null; // auto-classified New Features / Enhancements / Bug Fixes -- unrelated to the Category master
   screens: string[];
   problemStatement: string | null;
   objective: string | null;
@@ -112,7 +124,8 @@ export interface ReleaseNoteRecord {
   requirement?: RequirementRecord;
 }
 
-export type RequirementPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+// P0 (highest) .. P10 (lowest) -- the number itself is the sort key.
+export type RequirementPriority = number;
 
 export interface RequirementRecord {
   id: string;
@@ -120,8 +133,15 @@ export interface RequirementRecord {
   title: string;
   description: string | null;
   priority: RequirementPriority;
-  dueDate: string | null;
-  revisedDueDate: string | null;
+  moduleId: string | null;
+  module?: ModuleRecord | null;
+  categoryId: string | null;
+  category?: CategoryRecord | null;
+  productOwner: string | null;
+  asanaLink: string | null;
+  releaseNotesText: string | null;
+  generalRemarks: string | null;
+  deliveryDate: string | null;
   stageId: string | null;
   stage?: WorkflowStageRecord | null;
   doneAt: string | null;
@@ -130,18 +150,30 @@ export interface RequirementRecord {
   linkedWorkItems: LinkedWorkItemRecord[];
   releaseNotes?: ReleaseNoteRecord[];
   figmaReferences?: FigmaReferenceRecord[];
+  comments?: CommentRecord[];
   phase?: { client: ClientRecord };
 }
+
+export type ActivityType = "create" | "update" | "stage_change" | "comment" | "pbi" | "figma";
 
 export interface AuditLogRecord {
   id: string;
   entityType: string;
   entityId: string;
+  activityType: ActivityType;
   field: string;
   oldValue: string | null;
   newValue: string | null;
   actor: string;
   occurredAt: string;
+}
+
+export interface TimelineNode {
+  entityType: string;
+  entityId: string;
+  label: string;
+  logs: AuditLogRecord[];
+  children?: TimelineNode[];
 }
 
 export interface SyncRunResult {

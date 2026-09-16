@@ -5,13 +5,16 @@ import type {
   RequirementRecord,
   LinkedWorkItemRecord,
   FigmaReferenceRecord,
+  CommentRecord,
   ReleaseNoteRecord,
   ReleaseNoteStatus,
   StageRecord,
   WorkflowRecord,
   WorkflowScope,
   ModuleRecord,
+  CategoryRecord,
   AuditLogRecord,
+  TimelineNode,
   SyncRunResult,
 } from "./types.js";
 
@@ -46,23 +49,25 @@ export const phasesApi = {
   remove: (id: string) => api.delete<void>(`/phases/${id}`),
 };
 
+export interface RequirementInput {
+  title: string;
+  description?: string;
+  priority?: number;
+  moduleId?: string;
+  categoryId?: string;
+  productOwner?: string;
+  asanaLink?: string;
+  releaseNotesText?: string;
+  generalRemarks?: string;
+  deliveryDate?: string | null;
+}
+
 export const requirementsApi = {
   listForPhase: (phaseId: string) => api.get<RequirementRecord[]>(`/phases/${phaseId}/requirements`),
-  create: (
-    phaseId: string,
-    data: { title: string; description?: string; priority?: string; dueDate?: string; revisedDueDate?: string }
-  ) => api.post<RequirementRecord>(`/phases/${phaseId}/requirements`, data),
+  create: (phaseId: string, data: RequirementInput) =>
+    api.post<RequirementRecord>(`/phases/${phaseId}/requirements`, data),
   get: (id: string) => api.get<RequirementRecord>(`/requirements/${id}`),
-  update: (
-    id: string,
-    data: {
-      title?: string;
-      description?: string;
-      priority?: string;
-      dueDate?: string | null;
-      revisedDueDate?: string | null;
-    }
-  ) => api.patch<RequirementRecord>(`/requirements/${id}`, data),
+  update: (id: string, data: Partial<RequirementInput>) => api.patch<RequirementRecord>(`/requirements/${id}`, data),
   moveStage: (id: string, stageId: string) =>
     api.patch<RequirementRecord & { releaseNoteWarning: string | null }>(`/requirements/${id}/stage`, { stageId }),
   remove: (id: string) => api.delete<void>(`/requirements/${id}`),
@@ -76,6 +81,8 @@ export const requirementsApi = {
     api.post<FigmaReferenceRecord>(`/requirements/${requirementId}/figma-links`, { url }),
   removeFigmaLink: (requirementId: string, referenceId: string) =>
     api.delete<void>(`/requirements/${requirementId}/figma-links/${referenceId}`),
+  addComment: (requirementId: string, body: string) =>
+    api.post<CommentRecord>(`/requirements/${requirementId}/comments`, { body }),
 };
 
 export const releaseNotesApi = {
@@ -126,7 +133,17 @@ export const modulesApi = {
   remove: (id: string) => api.delete<void>(`/modules/${id}`),
 };
 
+export const categoriesApi = {
+  list: () => api.get<CategoryRecord[]>("/categories"),
+  create: (data: { name: string; showByDefault?: boolean }) => api.post<CategoryRecord>("/categories", data),
+  update: (id: string, data: { name?: string; showByDefault?: boolean }) =>
+    api.patch<CategoryRecord>(`/categories/${id}`, data),
+  remove: (id: string) => api.delete<void>(`/categories/${id}`),
+};
+
 export const auditLogsApi = {
   list: (entityType: string, entityId: string) =>
     api.get<AuditLogRecord[]>(`/audit-logs?entityType=${entityType}&entityId=${entityId}`),
+  rollup: (entityType: "client" | "phase", entityId: string) =>
+    api.get<TimelineNode>(`/audit-logs/rollup?entityType=${entityType}&entityId=${entityId}`),
 };

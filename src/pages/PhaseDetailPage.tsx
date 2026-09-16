@@ -10,10 +10,11 @@ import {
   type SortingState,
 } from "@tanstack/react-table";
 import { requirementsApi, phasesApi } from "../api/resources.js";
-import type { RequirementRecord, PhaseRecord, ClientRecord, RequirementPriority } from "../api/types.js";
+import type { RequirementRecord, PhaseRecord, ClientRecord } from "../api/types.js";
 import { StageBadge, ReleaseNoteStatusBadge, PriorityBadge } from "../components/StatusBadge.js";
 import { KanbanBoard } from "../components/KanbanBoard.js";
 import { TimelineButton, TimelinePanel } from "../components/Timeline.js";
+import { RequirementFormModal } from "../components/RequirementFormModal.js";
 
 type ViewMode = "list" | "board";
 
@@ -25,14 +26,12 @@ export function PhaseDetailPage() {
   const [phase, setPhase] = useState<(PhaseRecord & { client: ClientRecord }) | null>(null);
   const [requirements, setRequirements] = useState<RequirementRecord[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [newTitle, setNewTitle] = useState("");
-  const [newPriority, setNewPriority] = useState<RequirementPriority>("MEDIUM");
-  const [newDueDate, setNewDueDate] = useState("");
-  const [creating, setCreating] = useState(false);
   const [view, setView] = useState<ViewMode>("board");
   const [error, setError] = useState<string | null>(null);
   const [showEditPhase, setShowEditPhase] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
+  const [showAddRequirement, setShowAddRequirement] = useState(false);
+  const [showNotFeasible, setShowNotFeasible] = useState(false);
 
   function reload() {
     if (!phaseId) return;
@@ -42,23 +41,9 @@ export function PhaseDetailPage() {
 
   useEffect(reload, [phaseId]);
 
-  async function addRequirement() {
-    if (!phaseId || !newTitle.trim()) return;
-    setCreating(true);
-    try {
-      await requirementsApi.create(phaseId, {
-        title: newTitle.trim(),
-        priority: newPriority,
-        dueDate: newDueDate ? new Date(newDueDate).toISOString() : undefined,
-      });
-      setNewTitle("");
-      setNewDueDate("");
-      setNewPriority("MEDIUM");
-      reload();
-    } finally {
-      setCreating(false);
-    }
-  }
+  const visibleRequirements = showNotFeasible
+    ? requirements
+    : requirements.filter((r) => r.category?.showByDefault !== false);
 
   async function moveRequirementStage(requirementId: string, workflowStageId: string) {
     setRequirements((prev) =>
@@ -92,19 +77,17 @@ export function PhaseDetailPage() {
           return stage ? <StageBadge name={stage.stage.name} color={stage.stage.color} /> : <span className="text-[#9aa1ac]">—</span>;
         },
       }),
-      columnHelper.accessor("dueDate", {
-        header: "Due",
+      columnHelper.accessor("deliveryDate", {
+        header: "Delivery",
         cell: (info) => {
           const v = info.getValue();
           return v ? new Date(v).toLocaleDateString() : <span className="text-[#9aa1ac]">—</span>;
         },
       }),
-      columnHelper.accessor("revisedDueDate", {
-        header: "Revised due",
-        cell: (info) => {
-          const v = info.getValue();
-          return v ? new Date(v).toLocaleDateString() : <span className="text-[#9aa1ac]">—</span>;
-        },
+      columnHelper.accessor((r) => r.category, {
+        id: "category",
+        header: "Category",
+        cell: (info) => info.getValue()?.name ?? <span className="text-[#9aa1ac]">—</span>,
       }),
       columnHelper.accessor((r) => r.linkedWorkItems, {
         id: "linkedWorkItems",
@@ -132,7 +115,7 @@ export function PhaseDetailPage() {
   );
 
   const table = useReactTable({
-    data: requirements,
+    data: visibleRequirements,
     columns,
     state: { sorting },
     onSortingChange: setSorting,
@@ -178,37 +161,16 @@ export function PhaseDetailPage() {
         </p>
       )}
 
-      <div className="mb-4 flex flex-wrap gap-2">
-        <input
-          value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
-          placeholder="New requirement title"
-          className="min-w-[200px] flex-1 rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
-          onKeyDown={(e) => e.key === "Enter" && addRequirement()}
-        />
-        <select
-          value={newPriority}
-          onChange={(e) => setNewPriority(e.target.value as RequirementPriority)}
-          className="rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
-        >
-          <option value="LOW">Low</option>
-          <option value="MEDIUM">Medium</option>
-          <option value="HIGH">High</option>
-          <option value="URGENT">Urgent</option>
-        </select>
-        <input
-          type="date"
-          value={newDueDate}
-          onChange={(e) => setNewDueDate(e.target.value)}
-          className="rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
-          style={{ colorScheme: "dark" }}
-        />
+      <div className="mb-4 flex items-center justify-between">
+        <label className="flex items-center gap-2 text-xs text-[#9aa1ac]">
+          <input type="checkbox" checked={showNotFeasible} onChange={(e) => setShowNotFeasible(e.target.checked)} />
+          Show not feasible
+        </label>
         <button
-          onClick={addRequirement}
-          disabled={creating || !newTitle.trim()}
-          className="flex items-center gap-1.5 rounded-lg bg-[#5b8cff] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+          onClick={() => setShowAddRequirement(true)}
+          className="flex items-center gap-1.5 rounded-lg bg-[#5b8cff] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
         >
-          <Plus size={16} /> Add requirement
+          <Plus size={16} /> New requirement
         </button>
       </div>
 
@@ -216,7 +178,7 @@ export function PhaseDetailPage() {
         workflowStages.length ? (
           <KanbanBoard
             columns={workflowStages.map((ws) => ({ id: ws.id, title: ws.stage.name, color: ws.stage.color }))}
-            items={requirements}
+            items={visibleRequirements}
             getColumnId={(r) => r.stageId}
             onMove={moveRequirementStage}
             renderCard={(r) => (
@@ -226,7 +188,7 @@ export function PhaseDetailPage() {
                   <PriorityBadge priority={r.priority} />
                 </div>
                 <div className="mt-1 flex items-center gap-2 text-xs text-[#9aa1ac]">
-                  {r.dueDate && <span>Due {new Date(r.dueDate).toLocaleDateString()}</span>}
+                  {r.deliveryDate && <span>Due {new Date(r.deliveryDate).toLocaleDateString()}</span>}
                   {r.linkedWorkItems.length > 0 && <span>{r.linkedWorkItems.length} PBI(s)</span>}
                 </div>
               </div>
@@ -268,7 +230,7 @@ export function PhaseDetailPage() {
                   ))}
                 </tr>
               ))}
-              {requirements.length === 0 && (
+              {visibleRequirements.length === 0 && (
                 <tr>
                   <td colSpan={columns.length} className="px-4 py-8 text-center text-sm text-[#9aa1ac]">
                     No requirements yet.
@@ -291,6 +253,17 @@ export function PhaseDetailPage() {
         />
       )}
       {showTimeline && <TimelinePanel entityType="phase" entityId={phase.id} onClose={() => setShowTimeline(false)} />}
+      {showAddRequirement && (
+        <RequirementFormModal
+          phaseId={phase.id}
+          phaseDeliveryDate={phase.deliveryDate}
+          onClose={() => setShowAddRequirement(false)}
+          onSaved={() => {
+            setShowAddRequirement(false);
+            reload();
+          }}
+        />
+      )}
     </div>
   );
 }

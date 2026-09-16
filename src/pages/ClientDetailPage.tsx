@@ -68,7 +68,7 @@ export function ClientDetailPage() {
       <p className="mb-6 text-sm text-[#9aa1ac]">
         {client.productOwner ? `Owner: ${client.productOwner}` : "No product owner"} ·{" "}
         {client.slackChannelName ? `Slack: #${client.slackChannelName}` : "No Slack channel"} ·{" "}
-        {client.adoProject ? `ADO: ${client.adoProject} (${client.adoAreaPath})` : "ADO not configured"}
+        {client.adoProjectUrl ? `ADO: ${client.adoProjectUrl}` : "ADO not configured"}
         {client.deliveryDate && <> · Delivery: {new Date(client.deliveryDate).toLocaleDateString()}</>}
       </p>
       {client.modules && client.modules.length > 0 && (
