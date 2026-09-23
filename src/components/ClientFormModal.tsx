@@ -73,10 +73,10 @@ export function ClientFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-[#2a2f3a] bg-[#171a21] p-6">
-        <h2 className="mb-4 text-base font-semibold text-white">{isEdit ? "Edit client" : "New client"}</h2>
+      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--panel)] p-6">
+        <h2 className="mb-4 text-base font-semibold text-[var(--text)]">{isEdit ? "Edit client" : "New client"}</h2>
         {!isEdit && (
-          <p className="mb-4 text-xs text-[#9aa1ac]">
+          <p className="mb-4 text-xs text-[var(--text-dim)]">
             Starts on the first stage of the Projects board. Its own phase and requirement workflows are cloned from
             the default templates automatically.
           </p>
@@ -93,7 +93,7 @@ export function ClientFormModal({
               <input value={productOwner} onChange={(e) => setProductOwner(e.target.value)} className={inputClass} placeholder="Name" />
             </Field>
             <Field label="Delivery date">
-              <input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} className={inputClass} style={{ colorScheme: "dark" }} />
+              <input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} className={inputClass} />
             </Field>
           </div>
 
@@ -106,14 +106,14 @@ export function ClientFormModal({
                   onClick={() => toggleModule(m.id)}
                   className={`rounded-full border px-3 py-1 text-xs ${
                     selectedModuleIds.has(m.id)
-                      ? "border-[#5b8cff] bg-[#5b8cff]/15 text-[#5b8cff]"
-                      : "border-[#2a2f3a] text-[#9aa1ac] hover:text-white"
+                      ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--accent)]"
+                      : "border-[var(--border)] text-[var(--text-dim)] hover:text-[var(--text)]"
                   }`}
                 >
                   {m.name}
                 </button>
               ))}
-              {modules.length === 0 && <span className="text-xs text-[#9aa1ac]">None defined yet — add some in Settings → Modules.</span>}
+              {modules.length === 0 && <span className="text-xs text-[var(--text-dim)]">None defined yet — add some in Settings → Modules.</span>}
             </div>
           </Field>
 
@@ -138,16 +138,16 @@ export function ClientFormModal({
           </Field>
         </div>
 
-        {error && <p className="mt-3 text-sm text-[#e05a5a]">{error}</p>}
+        {error && <p className="mt-3 text-sm text-[var(--red)]">{error}</p>}
 
         <div className="mt-5 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm text-[#9aa1ac] hover:text-white">
+          <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm text-[var(--text-dim)] hover:text-[var(--text)]">
             Cancel
           </button>
           <button
             onClick={submit}
             disabled={submitting || !name.trim()}
-            className="rounded-lg bg-[#5b8cff] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+            className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
           >
             {submitting ? "Saving…" : isEdit ? "Save changes" : "Create"}
           </button>
@@ -158,12 +158,12 @@ export function ClientFormModal({
 }
 
 const inputClass =
-  "w-full rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]";
+  "w-full rounded-lg border border-[var(--border)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]";
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-xs font-medium text-[#9aa1ac]">{label}</span>
+      <span className="text-xs font-medium text-[var(--text-dim)]">{label}</span>
       {children}
     </label>
   );

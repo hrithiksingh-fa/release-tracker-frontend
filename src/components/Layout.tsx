@@ -1,8 +1,9 @@
 import { NavLink, Outlet } from "react-router-dom";
 import clsx from "clsx";
-import { Users, ClipboardCheck, RefreshCw, Settings, Menu, X } from "lucide-react";
+import { Users, ClipboardCheck, RefreshCw, Settings, Menu, X, Sun, Moon } from "lucide-react";
 import { useState } from "react";
 import { syncApi } from "../api/resources.js";
+import { useThemeStore } from "../store/themeStore.js";
 
 const NAV_ITEMS = [
   { to: "/", label: "Clients", icon: Users, end: true },
@@ -22,6 +23,8 @@ export function Layout() {
       return false;
     }
   });
+  const theme = useThemeStore((s) => s.theme);
+  const toggleTheme = useThemeStore((s) => s.toggleTheme);
 
   function toggleCollapsed() {
     setCollapsed((prev) => {
@@ -52,23 +55,36 @@ export function Layout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#0f1115] text-[#e6e8eb]">
+    <div className="flex min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <aside
         className={clsx(
-          "flex flex-col border-r border-[#2a2f3a] bg-[#171a21] p-4 transition-[width] duration-150",
+          "flex flex-col border-r border-[var(--border)] bg-[var(--panel)] p-4 transition-[width] duration-150",
           collapsed ? "w-16" : "w-56"
         )}
       >
-        <div className="mb-6 flex items-center justify-between px-1">
+        <div className={clsx("mb-2 flex items-center px-1", collapsed ? "flex-col gap-2" : "justify-between")}>
           {!collapsed && <span className="text-lg font-bold">Release Tracker</span>}
           <button
             onClick={toggleCollapsed}
-            className="rounded-lg p-1.5 text-[#9aa1ac] hover:bg-white/5 hover:text-white"
+            className="rounded-lg p-1.5 text-[var(--text-dim)] hover:bg-[var(--hover-surface)] hover:text-[var(--text)]"
             title={collapsed ? "Expand menu" : "Collapse menu"}
           >
             {collapsed ? <Menu size={18} /> : <X size={18} />}
           </button>
         </div>
+
+        <button
+          onClick={toggleTheme}
+          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          className={clsx(
+            "mb-4 flex items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-dim)] hover:border-[var(--accent)] hover:text-[var(--text)]",
+            collapsed && "justify-center"
+          )}
+        >
+          {theme === "dark" ? <Moon size={14} /> : <Sun size={14} />}
+          {!collapsed && (theme === "dark" ? "Dark mode" : "Light mode")}
+        </button>
+
         <nav className="flex flex-col gap-1">
           {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
             <NavLink
@@ -80,7 +96,9 @@ export function Layout() {
                 clsx(
                   "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium",
                   collapsed && "justify-center",
-                  isActive ? "bg-[#5b8cff]/15 text-[#5b8cff]" : "text-[#9aa1ac] hover:bg-white/5 hover:text-white"
+                  isActive
+                    ? "bg-[var(--accent)]/15 text-[var(--accent)]"
+                    : "text-[var(--text-dim)] hover:bg-[var(--hover-surface)] hover:text-[var(--text)]"
                 )
               }
             >
@@ -90,19 +108,19 @@ export function Layout() {
           ))}
         </nav>
 
-        <div className="mt-auto border-t border-[#2a2f3a] pt-4">
+        <div className="mt-auto border-t border-[var(--border)] pt-4">
           <button
             onClick={runSyncNow}
             disabled={syncing}
             title={collapsed ? "Run EOD sync now" : undefined}
             className={clsx(
-              "flex w-full items-center justify-center gap-2 rounded-lg border border-[#2a2f3a] px-3 py-2 text-xs font-medium text-[#9aa1ac] hover:border-[#5b8cff] hover:text-white disabled:opacity-50"
+              "flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--text-dim)] hover:border-[var(--accent)] hover:text-[var(--text)] disabled:opacity-50"
             )}
           >
             <RefreshCw size={14} className={syncing ? "animate-spin" : ""} />
             {!collapsed && (syncing ? "Syncing…" : "Run EOD sync now")}
           </button>
-          {!collapsed && lastResult && <p className="mt-2 text-[11px] leading-snug text-[#9aa1ac]">{lastResult}</p>}
+          {!collapsed && lastResult && <p className="mt-2 text-[11px] leading-snug text-[var(--text-dim)]">{lastResult}</p>}
         </div>
       </aside>
       <main className="flex-1 overflow-y-auto">

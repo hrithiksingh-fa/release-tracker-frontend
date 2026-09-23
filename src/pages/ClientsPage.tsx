@@ -49,29 +49,29 @@ export function ClientsPage() {
           <ViewToggle view={view} onChange={setView} />
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-1.5 rounded-lg bg-[#5b8cff] px-3 py-2 text-sm font-semibold text-white hover:opacity-90"
+            className="flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white hover:opacity-90"
           >
             <Plus size={16} /> New client
           </button>
         </div>
       </div>
 
-      {error && <p className="mb-4 text-sm text-[#e05a5a]">{error}</p>}
+      {error && <p className="mb-4 text-sm text-[var(--red)]">{error}</p>}
       {loading ? (
-        <p className="text-sm text-[#9aa1ac]">Loading…</p>
+        <p className="text-sm text-[var(--text-dim)]">Loading…</p>
       ) : clients.length === 0 ? (
-        <p className="text-sm text-[#9aa1ac]">No clients yet. Create one to get started.</p>
+        <p className="text-sm text-[var(--text-dim)]">No clients yet. Create one to get started.</p>
       ) : view === "list" ? (
-        <div className="divide-y divide-[#2a2f3a] rounded-xl border border-[#2a2f3a] bg-[#171a21]">
+        <div className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)] bg-[var(--panel)]">
           {clients.map((c) => (
             <Link
               key={c.id}
               to={`/clients/${c.id}`}
-              className="flex items-center justify-between px-4 py-3 hover:bg-white/5"
+              className="flex items-center justify-between px-4 py-3 hover:bg-[var(--hover-surface)]"
             >
               <div>
-                <div className="font-medium text-white">{c.name}</div>
-                <div className="mt-0.5 text-xs text-[#9aa1ac]">
+                <div className="font-medium text-[var(--text)]">{c.name}</div>
+                <div className="mt-0.5 text-xs text-[var(--text-dim)]">
                   {c.productOwner ? `Owner: ${c.productOwner}` : "No product owner"} ·{" "}
                   {c.slackChannelName ? `#${c.slackChannelName}` : "No Slack channel"}
                 </div>
@@ -81,8 +81,8 @@ export function ClientsPage() {
                 <span
                   className={
                     c.adoPatConfigured
-                      ? "text-xs font-medium text-[#33c17a]"
-                      : "text-xs font-medium text-[#9aa1ac]"
+                      ? "text-xs font-medium text-[var(--green)]"
+                      : "text-xs font-medium text-[var(--text-dim)]"
                   }
                 >
                   {c.adoPatConfigured ? "ADO connected" : "ADO not connected"}
@@ -99,15 +99,15 @@ export function ClientsPage() {
           onMove={moveClientStage}
           renderCard={(c) => (
             <div onClick={() => navigate(`/clients/${c.id}`)}>
-              <div className="text-sm font-medium text-white">{c.name}</div>
-              <div className="mt-1 text-xs text-[#9aa1ac]">
+              <div className="text-sm font-medium text-[var(--text)]">{c.name}</div>
+              <div className="mt-1 text-xs text-[var(--text-dim)]">
                 {c.productOwner ?? "No owner"} · {c.slackChannelName ? `#${c.slackChannelName}` : "No Slack"}
               </div>
             </div>
           )}
         />
       ) : (
-        <p className="text-sm text-[#e05a5a]">No CLIENT workflow found. Run the seed script on the backend.</p>
+        <p className="text-sm text-[var(--red)]">No CLIENT workflow found. Run the seed script on the backend.</p>
       )}
 
       {showCreate && (
@@ -125,11 +125,11 @@ export function ClientsPage() {
 
 function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode) => void }) {
   return (
-    <div className="flex overflow-hidden rounded-lg border border-[#2a2f3a]">
+    <div className="flex overflow-hidden rounded-lg border border-[var(--border)]">
       <button
         onClick={() => onChange("board")}
         className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${
-          view === "board" ? "bg-[#5b8cff]/15 text-[#5b8cff]" : "text-[#9aa1ac] hover:text-white"
+          view === "board" ? "bg-[var(--accent)]/15 text-[var(--accent)]" : "text-[var(--text-dim)] hover:text-[var(--text)]"
         }`}
       >
         <LayoutGrid size={14} /> Board
@@ -137,7 +137,7 @@ function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode
       <button
         onClick={() => onChange("list")}
         className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${
-          view === "list" ? "bg-[#5b8cff]/15 text-[#5b8cff]" : "text-[#9aa1ac] hover:text-white"
+          view === "list" ? "bg-[var(--accent)]/15 text-[var(--accent)]" : "text-[var(--text-dim)] hover:text-[var(--text)]"
         }`}
       >
         <List size={14} /> List

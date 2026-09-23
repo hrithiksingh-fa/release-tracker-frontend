@@ -76,13 +76,13 @@ function Column<T extends { id: string }>({
     <div
       ref={setNodeRef}
       className={`flex w-72 shrink-0 flex-col rounded-xl border p-2 transition-colors ${
-        isOver ? "border-[#5b8cff] bg-[#5b8cff]/5" : "border-[#2a2f3a] bg-[#171a21]"
+        isOver ? "border-[var(--accent)] bg-[var(--accent)]/5" : "border-[var(--border)] bg-[var(--panel)]"
       }`}
     >
       <div className="flex items-center gap-2 px-2 py-2">
-        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: column.color ?? "#9aa1ac" }} />
-        <span className="text-sm font-semibold text-white">{column.title}</span>
-        <span className="text-xs text-[#9aa1ac]">{items.length}</span>
+        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: column.color ?? "var(--text-dim)" }} />
+        <span className="text-sm font-semibold text-[var(--text)]">{column.title}</span>
+        <span className="text-xs text-[var(--text-dim)]">{items.length}</span>
       </div>
       <div className="flex flex-col gap-2 px-1 pb-1">
         {items.map((item) => (
@@ -91,7 +91,7 @@ function Column<T extends { id: string }>({
           </Card>
         ))}
         {items.length === 0 && (
-          <div className="rounded-lg border border-dashed border-[#2a2f3a] py-6 text-center text-xs text-[#9aa1ac]">
+          <div className="rounded-lg border border-dashed border-[var(--border)] py-6 text-center text-xs text-[var(--text-dim)]">
             Drop here
           </div>
         )}
@@ -112,7 +112,7 @@ function Card<T extends { id: string }>({ item, children }: { item: T; children:
       style={style}
       {...listeners}
       {...attributes}
-      className={`cursor-grab rounded-lg border border-[#2a2f3a] bg-[#1e2229] p-3 active:cursor-grabbing ${
+      className={`cursor-grab rounded-lg border border-[var(--border)] bg-[var(--panel-2)] p-3 active:cursor-grabbing ${
         isDragging ? "opacity-60" : ""
       }`}
     >

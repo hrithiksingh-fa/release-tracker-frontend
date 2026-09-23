@@ -63,7 +63,7 @@ export function PhaseDetailPage() {
     () => [
       columnHelper.accessor("title", {
         header: "Requirement",
-        cell: (info) => <span className="font-medium text-white">{info.getValue()}</span>,
+        cell: (info) => <span className="font-medium text-[var(--text)]">{info.getValue()}</span>,
       }),
       columnHelper.accessor("priority", {
         header: "Priority",
@@ -74,29 +74,29 @@ export function PhaseDetailPage() {
         header: "Stage",
         cell: (info) => {
           const stage = info.getValue();
-          return stage ? <StageBadge name={stage.stage.name} color={stage.stage.color} /> : <span className="text-[#9aa1ac]">—</span>;
+          return stage ? <StageBadge name={stage.stage.name} color={stage.stage.color} /> : <span className="text-[var(--text-dim)]">—</span>;
         },
       }),
       columnHelper.accessor("deliveryDate", {
         header: "Delivery",
         cell: (info) => {
           const v = info.getValue();
-          return v ? new Date(v).toLocaleDateString() : <span className="text-[#9aa1ac]">—</span>;
+          return v ? new Date(v).toLocaleDateString() : <span className="text-[var(--text-dim)]">—</span>;
         },
       }),
       columnHelper.accessor((r) => r.category, {
         id: "category",
         header: "Category",
-        cell: (info) => info.getValue()?.name ?? <span className="text-[#9aa1ac]">—</span>,
+        cell: (info) => info.getValue()?.name ?? <span className="text-[var(--text-dim)]">—</span>,
       }),
       columnHelper.accessor((r) => r.linkedWorkItems, {
         id: "linkedWorkItems",
         header: "PBIs",
         cell: (info) => {
           const items = info.getValue();
-          if (!items.length) return <span className="text-[#9aa1ac]">None linked</span>;
+          if (!items.length) return <span className="text-[var(--text-dim)]">None linked</span>;
           return (
-            <span className="text-[#9aa1ac]">
+            <span className="text-[var(--text-dim)]">
               {items.map((li) => `#${li.adoId} (${li.adoState ?? "?"})`).join(", ")}
             </span>
           );
@@ -107,7 +107,7 @@ export function PhaseDetailPage() {
         header: "Release note",
         cell: (info) => {
           const note = info.getValue();
-          return note ? <ReleaseNoteStatusBadge status={note.status} /> : <span className="text-[#9aa1ac]">—</span>;
+          return note ? <ReleaseNoteStatusBadge status={note.status} /> : <span className="text-[var(--text-dim)]">—</span>;
         },
       }),
     ],
@@ -123,7 +123,7 @@ export function PhaseDetailPage() {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  if (!phase) return <div className="p-8 text-sm text-[#9aa1ac]">Loading…</div>;
+  if (!phase) return <div className="p-8 text-sm text-[var(--text-dim)]">Loading…</div>;
 
   const workflowStages = phase.client.requirementWorkflow?.stages ?? [];
 
@@ -131,7 +131,7 @@ export function PhaseDetailPage() {
     <div className="mx-auto max-w-6xl p-8">
       <Link
         to={`/clients/${phase.clientId}`}
-        className="mb-4 inline-flex items-center gap-1 text-sm text-[#9aa1ac] hover:text-white"
+        className="mb-4 inline-flex items-center gap-1 text-sm text-[var(--text-dim)] hover:text-[var(--text)]"
       >
         <ArrowLeft size={14} /> {phase.client.name}
       </Link>
@@ -141,34 +141,34 @@ export function PhaseDetailPage() {
           <TimelineButton onClick={() => setShowTimeline(true)} />
           <button
             onClick={() => setShowEditPhase(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-[#2a2f3a] px-3 py-1.5 text-xs font-medium text-[#9aa1ac] hover:border-[#5b8cff] hover:text-white"
+            className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-dim)] hover:border-[var(--accent)] hover:text-[var(--text)]"
           >
             <Pencil size={14} /> Edit
           </button>
           <ViewToggle view={view} onChange={setView} />
         </div>
       </div>
-      {phase.description && <p className="mb-2 text-sm text-[#9aa1ac]">{phase.description}</p>}
-      <p className="mb-6 text-sm text-[#9aa1ac]">
+      {phase.description && <p className="mb-2 text-sm text-[var(--text-dim)]">{phase.description}</p>}
+      <p className="mb-6 text-sm text-[var(--text-dim)]">
         {phase.deliveryDate && <>Delivery: {new Date(phase.deliveryDate).toLocaleDateString()} · </>}
         Stages move manually (drag on the board, or from the requirement page). Moving into a "Done"-flagged stage
         generates a release note draft.
       </p>
 
       {error && (
-        <p className="mb-4 rounded-lg border border-[#e0a13a]/35 bg-[#e0a13a]/10 px-3 py-2 text-sm text-[#e0a13a]">
+        <p className="mb-4 rounded-lg border border-[var(--amber)]/35 bg-[var(--amber)]/10 px-3 py-2 text-sm text-[var(--amber)]">
           {error}
         </p>
       )}
 
       <div className="mb-4 flex items-center justify-between">
-        <label className="flex items-center gap-2 text-xs text-[#9aa1ac]">
+        <label className="flex items-center gap-2 text-xs text-[var(--text-dim)]">
           <input type="checkbox" checked={showNotFeasible} onChange={(e) => setShowNotFeasible(e.target.checked)} />
           Show not feasible
         </label>
         <button
           onClick={() => setShowAddRequirement(true)}
-          className="flex items-center gap-1.5 rounded-lg bg-[#5b8cff] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+          className="flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
         >
           <Plus size={16} /> New requirement
         </button>
@@ -184,10 +184,10 @@ export function PhaseDetailPage() {
             renderCard={(r) => (
               <div onClick={() => navigate(`/requirements/${r.id}`)}>
                 <div className="flex items-start justify-between gap-2">
-                  <div className="text-sm font-medium text-white">{r.title}</div>
+                  <div className="text-sm font-medium text-[var(--text)]">{r.title}</div>
                   <PriorityBadge priority={r.priority} />
                 </div>
-                <div className="mt-1 flex items-center gap-2 text-xs text-[#9aa1ac]">
+                <div className="mt-1 flex items-center gap-2 text-xs text-[var(--text-dim)]">
                   {r.deliveryDate && <span>Due {new Date(r.deliveryDate).toLocaleDateString()}</span>}
                   {r.linkedWorkItems.length > 0 && <span>{r.linkedWorkItems.length} PBI(s)</span>}
                 </div>
@@ -195,19 +195,19 @@ export function PhaseDetailPage() {
             )}
           />
         ) : (
-          <p className="text-sm text-[#e05a5a]">This client has no requirement workflow configured.</p>
+          <p className="text-sm text-[var(--red)]">This client has no requirement workflow configured.</p>
         )
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-[#2a2f3a] bg-[#171a21]">
+        <div className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--panel)]">
           <table className="w-full border-collapse text-sm">
             <thead>
               {table.getHeaderGroups().map((hg) => (
-                <tr key={hg.id} className="border-b border-[#2a2f3a]">
+                <tr key={hg.id} className="border-b border-[var(--border)]">
                   {hg.headers.map((header) => (
                     <th
                       key={header.id}
                       onClick={header.column.getToggleSortingHandler()}
-                      className="cursor-pointer select-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#9aa1ac]"
+                      className="cursor-pointer select-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--text-dim)]"
                     >
                       {flexRender(header.column.columnDef.header, header.getContext())}
                       {{ asc: " ↑", desc: " ↓" }[header.column.getIsSorted() as string] ?? ""}
@@ -221,7 +221,7 @@ export function PhaseDetailPage() {
                 <tr
                   key={row.id}
                   onClick={() => navigate(`/requirements/${row.original.id}`)}
-                  className="cursor-pointer border-b border-[#2a2f3a] last:border-0 hover:bg-white/5"
+                  className="cursor-pointer border-b border-[var(--border)] last:border-0 hover:bg-[var(--hover-surface)]"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="px-4 py-3">
@@ -232,7 +232,7 @@ export function PhaseDetailPage() {
               ))}
               {visibleRequirements.length === 0 && (
                 <tr>
-                  <td colSpan={columns.length} className="px-4 py-8 text-center text-sm text-[#9aa1ac]">
+                  <td colSpan={columns.length} className="px-4 py-8 text-center text-sm text-[var(--text-dim)]">
                     No requirements yet.
                   </td>
                 </tr>
@@ -270,11 +270,11 @@ export function PhaseDetailPage() {
 
 function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode) => void }) {
   return (
-    <div className="flex overflow-hidden rounded-lg border border-[#2a2f3a]">
+    <div className="flex overflow-hidden rounded-lg border border-[var(--border)]">
       <button
         onClick={() => onChange("board")}
         className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${
-          view === "board" ? "bg-[#5b8cff]/15 text-[#5b8cff]" : "text-[#9aa1ac] hover:text-white"
+          view === "board" ? "bg-[var(--accent)]/15 text-[var(--accent)]" : "text-[var(--text-dim)] hover:text-[var(--text)]"
         }`}
       >
         <LayoutGrid size={14} /> Board
@@ -282,7 +282,7 @@ function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode
       <button
         onClick={() => onChange("list")}
         className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${
-          view === "list" ? "bg-[#5b8cff]/15 text-[#5b8cff]" : "text-[#9aa1ac] hover:text-white"
+          view === "list" ? "bg-[var(--accent)]/15 text-[var(--accent)]" : "text-[var(--text-dim)] hover:text-[var(--text)]"
         }`}
       >
         <List size={14} /> List
@@ -326,28 +326,28 @@ function EditPhaseModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-md rounded-xl border border-[#2a2f3a] bg-[#171a21] p-6">
-        <h2 className="mb-4 text-base font-semibold text-white">Edit phase</h2>
+      <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--panel)] p-6">
+        <h2 className="mb-4 text-base font-semibold text-[var(--text)]">Edit phase</h2>
         <div className="flex flex-col gap-3">
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-[#9aa1ac]">Name</span>
-            <input value={name} onChange={(e) => setName(e.target.value)} className="rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]" />
+            <span className="text-xs font-medium text-[var(--text-dim)]">Name</span>
+            <input value={name} onChange={(e) => setName(e.target.value)} className="rounded-lg border border-[var(--border)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]" />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-[#9aa1ac]">What this phase is about</span>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]" />
+            <span className="text-xs font-medium text-[var(--text-dim)]">What this phase is about</span>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="rounded-lg border border-[var(--border)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]" />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-[#9aa1ac]">Delivery date</span>
-            <input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} className="rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]" style={{ colorScheme: "dark" }} />
+            <span className="text-xs font-medium text-[var(--text-dim)]">Delivery date</span>
+            <input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} className="rounded-lg border border-[var(--border)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]" />
           </label>
         </div>
-        {error && <p className="mt-3 text-sm text-[#e05a5a]">{error}</p>}
+        {error && <p className="mt-3 text-sm text-[var(--red)]">{error}</p>}
         <div className="mt-5 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm text-[#9aa1ac] hover:text-white">
+          <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm text-[var(--text-dim)] hover:text-[var(--text)]">
             Cancel
           </button>
-          <button onClick={submit} disabled={submitting || !name.trim()} className="rounded-lg bg-[#5b8cff] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
+          <button onClick={submit} disabled={submitting || !name.trim()} className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
             {submitting ? "Saving…" : "Save changes"}
           </button>
         </div>

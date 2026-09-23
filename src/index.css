@@ -2,11 +2,50 @@
 @import "fieldassist-ui/styles/tokens.css";
 @source "../node_modules/fieldassist-ui/src";
 
+/*
+ * Theme: a `.dark` class on <html> (toggled by src/store/themeStore.ts,
+ * persisted to localStorage, defaulting to the OS preference) switches
+ * these custom properties. Every themed surface in the app references one
+ * of these via Tailwind arbitrary values (e.g. bg-[var(--panel)]) instead
+ * of a hardcoded hex, so this file is the only place the palette lives.
+ */
 :root {
+  color-scheme: light;
+
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --panel-2: #f0f1f4;
+  --border: #e1e4ea;
+  --text: #14161a;
+  --text-dim: #6b7280;
+  --hover-surface: rgba(15, 17, 21, 0.05);
+
+  --accent: #3d6fe0;
+  --green: #1f9d5c;
+  --amber: #a5690f;
+  --red: #d1493f;
+  --purple: #7c4fd6;
+}
+
+:root.dark {
   color-scheme: dark;
+
+  --bg: #0f1115;
+  --panel: #171a21;
+  --panel-2: #1e2229;
+  --border: #2a2f3a;
+  --text: #e6e8eb;
+  --text-dim: #9aa1ac;
+  --hover-surface: rgba(255, 255, 255, 0.05);
+
+  --accent: #5b8cff;
+  --green: #33c17a;
+  --amber: #e0a13a;
+  --red: #e05a5a;
+  --purple: #a06be0;
 }
 
 body {
-  background: #0f1115;
-  color: #e6e8eb;
+  background: var(--bg);
+  color: var(--text);
 }

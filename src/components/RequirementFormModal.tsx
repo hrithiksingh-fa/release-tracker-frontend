@@ -96,8 +96,8 @@ export function RequirementFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-[#2a2f3a] bg-[#171a21] p-6">
-        <h2 className="mb-4 text-base font-semibold text-white">{isEdit ? "Edit requirement" : "New requirement"}</h2>
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--panel)] p-6">
+        <h2 className="mb-4 text-base font-semibold text-[var(--text)]">{isEdit ? "Edit requirement" : "New requirement"}</h2>
         <div className="flex flex-col gap-3">
           <Field label="Title">
             <input value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} />
@@ -150,14 +150,13 @@ export function RequirementFormModal({
               value={deliveryDate}
               onChange={(e) => setDeliveryDate(e.target.value)}
               className={inputClass}
-              style={{ colorScheme: "dark" }}
             />
           </Field>
 
           {!isEdit && (
             <Field label="Azure DevOps PBI">
               <div className="flex flex-col gap-2">
-                <div className="flex gap-3 text-xs text-[#9aa1ac]">
+                <div className="flex gap-3 text-xs text-[var(--text-dim)]">
                   {(["none", "existing", "new"] as PbiMode[]).map((m) => (
                     <label key={m} className="flex items-center gap-1.5">
                       <input type="radio" name="pbiMode" checked={pbiMode === m} onChange={() => setPbiMode(m)} />
@@ -213,16 +212,16 @@ export function RequirementFormModal({
           </Field>
         </div>
 
-        {error && <p className="mt-3 text-sm text-[#e05a5a]">{error}</p>}
+        {error && <p className="mt-3 text-sm text-[var(--red)]">{error}</p>}
 
         <div className="mt-5 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm text-[#9aa1ac] hover:text-white">
+          <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm text-[var(--text-dim)] hover:text-[var(--text)]">
             Cancel
           </button>
           <button
             onClick={submit}
             disabled={submitting || !title.trim()}
-            className="rounded-lg bg-[#5b8cff] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+            className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
           >
             {submitting ? "Saving…" : isEdit ? "Save changes" : "Create"}
           </button>
@@ -233,12 +232,12 @@ export function RequirementFormModal({
 }
 
 const inputClass =
-  "w-full rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]";
+  "w-full rounded-lg border border-[var(--border)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]";
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-xs font-medium text-[#9aa1ac]">{label}</span>
+      <span className="text-xs font-medium text-[var(--text-dim)]">{label}</span>
       {children}
     </label>
   );

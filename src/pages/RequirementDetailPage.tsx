@@ -37,13 +37,13 @@ export function RequirementDetailPage() {
     reload();
   }
 
-  if (!requirement) return <div className="p-8 text-sm text-[#9aa1ac]">{error ?? "Loading…"}</div>;
+  if (!requirement) return <div className="p-8 text-sm text-[var(--text-dim)]">{error ?? "Loading…"}</div>;
 
   const workflowStages = requirement.phase?.client.requirementWorkflow?.stages ?? [];
 
   return (
     <div className="mx-auto max-w-3xl p-8">
-      <Link to={`/phases/${requirement.phaseId}`} className="mb-4 inline-flex items-center gap-1 text-sm text-[#9aa1ac] hover:text-white">
+      <Link to={`/phases/${requirement.phaseId}`} className="mb-4 inline-flex items-center gap-1 text-sm text-[var(--text-dim)] hover:text-[var(--text)]">
         <ArrowLeft size={14} /> Back to phase
       </Link>
 
@@ -57,16 +57,16 @@ export function RequirementDetailPage() {
           <TimelineButton onClick={() => setShowTimeline(true)} />
           <button
             onClick={() => setEditing(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-[#2a2f3a] px-3 py-1.5 text-xs font-medium text-[#9aa1ac] hover:border-[#5b8cff] hover:text-white"
+            className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-dim)] hover:border-[var(--accent)] hover:text-[var(--text)]"
           >
             <Pencil size={14} /> Edit
           </button>
         </div>
       </div>
-      {requirement.description && <p className="mb-4 text-sm text-[#9aa1ac]">{requirement.description}</p>}
+      {requirement.description && <p className="mb-4 text-sm text-[var(--text-dim)]">{requirement.description}</p>}
 
       {error && (
-        <p className="mb-4 rounded-lg border border-[#e0a13a]/35 bg-[#e0a13a]/10 px-3 py-2 text-sm text-[#e0a13a]">
+        <p className="mb-4 rounded-lg border border-[var(--amber)]/35 bg-[var(--amber)]/10 px-3 py-2 text-sm text-[var(--amber)]">
           {error}
         </p>
       )}
@@ -74,11 +74,11 @@ export function RequirementDetailPage() {
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
         {workflowStages.length > 0 && (
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-[#9aa1ac]">Stage</span>
+            <span className="text-xs font-medium text-[var(--text-dim)]">Stage</span>
             <select
               value={requirement.stageId ?? ""}
               onChange={(e) => moveStage(e.target.value)}
-              className="rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
+              className="rounded-lg border border-[var(--border)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
             >
               {workflowStages.map((ws) => (
                 <option key={ws.id} value={ws.id}>
@@ -103,14 +103,14 @@ export function RequirementDetailPage() {
         <div className="mb-6 flex flex-col gap-3">
           {requirement.releaseNotesText && (
             <div>
-              <div className="text-xs font-medium text-[#9aa1ac]">Release notes</div>
-              <p className="mt-0.5 text-sm text-white">{requirement.releaseNotesText}</p>
+              <div className="text-xs font-medium text-[var(--text-dim)]">Release notes</div>
+              <p className="mt-0.5 text-sm text-[var(--text)]">{requirement.releaseNotesText}</p>
             </div>
           )}
           {requirement.generalRemarks && (
             <div>
-              <div className="text-xs font-medium text-[#9aa1ac]">General remarks</div>
-              <p className="mt-0.5 text-sm text-white">{requirement.generalRemarks}</p>
+              <div className="text-xs font-medium text-[var(--text-dim)]">General remarks</div>
+              <p className="mt-0.5 text-sm text-[var(--text)]">{requirement.generalRemarks}</p>
             </div>
           )}
         </div>
@@ -118,14 +118,14 @@ export function RequirementDetailPage() {
 
       <section className="mb-8">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-[#9aa1ac]">
+          <h2 className="text-sm font-semibold text-[var(--text-dim)]">
             Linked PBIs ({requirement.linkedWorkItems.length})
           </h2>
           <div className="flex gap-2">
-            <button onClick={() => setLinkMode("existing")} className="text-xs font-medium text-[#5b8cff] hover:underline">
+            <button onClick={() => setLinkMode("existing")} className="text-xs font-medium text-[var(--accent)] hover:underline">
               Link existing
             </button>
-            <button onClick={() => setLinkMode("new")} className="text-xs font-medium text-[#5b8cff] hover:underline">
+            <button onClick={() => setLinkMode("new")} className="text-xs font-medium text-[var(--accent)] hover:underline">
               Create PBI
             </button>
           </div>
@@ -144,21 +144,21 @@ export function RequirementDetailPage() {
         )}
 
         {requirement.linkedWorkItems.length === 0 ? (
-          <p className="text-sm text-[#9aa1ac]">No linked PBIs yet.</p>
+          <p className="text-sm text-[var(--text-dim)]">No linked PBIs yet.</p>
         ) : (
-          <div className="divide-y divide-[#2a2f3a] rounded-xl border border-[#2a2f3a] bg-[#171a21]">
+          <div className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)] bg-[var(--panel)]">
             {requirement.linkedWorkItems.map((li) => (
               <div key={li.id} className="flex items-center justify-between px-4 py-3">
                 <div>
-                  <div className="text-sm font-medium text-white">
+                  <div className="text-sm font-medium text-[var(--text)]">
                     #{li.adoId} {li.title ?? ""}
                   </div>
-                  <div className="mt-0.5 text-xs text-[#9aa1ac]">
+                  <div className="mt-0.5 text-xs text-[var(--text-dim)]">
                     State: {li.adoState ?? "not synced yet"}
                     {li.lastSyncedAt ? ` · synced ${new Date(li.lastSyncedAt).toLocaleString()}` : ""}
                   </div>
                 </div>
-                <button onClick={() => unlink(li.id)} className="text-[#9aa1ac] hover:text-[#e05a5a]" title="Unlink">
+                <button onClick={() => unlink(li.id)} className="text-[var(--text-dim)] hover:text-[var(--red)]" title="Unlink">
                   <X size={16} />
                 </button>
               </div>
@@ -170,11 +170,11 @@ export function RequirementDetailPage() {
       <FigmaReferencesSection requirement={requirement} onChange={reload} />
 
       <section className="mb-8">
-        <h2 className="mb-3 text-sm font-semibold text-[#9aa1ac]">
+        <h2 className="mb-3 text-sm font-semibold text-[var(--text-dim)]">
           Release notes ({requirement.releaseNotes?.length ?? 0})
         </h2>
         {!requirement.releaseNotes?.length ? (
-          <p className="text-sm text-[#9aa1ac]">
+          <p className="text-sm text-[var(--text-dim)]">
             Generated automatically when this requirement is moved into a "Done"-flagged stage.
           </p>
         ) : (
@@ -183,14 +183,14 @@ export function RequirementDetailPage() {
               <Link
                 key={note.id}
                 to={`/review?noteId=${note.id}`}
-                className="rounded-xl border border-[#2a2f3a] bg-[#171a21] p-4 hover:border-[#5b8cff]"
+                className="rounded-xl border border-[var(--border)] bg-[var(--panel)] p-4 hover:border-[var(--accent)]"
               >
                 <div className="mb-2 flex items-center gap-2">
-                  <span className="text-sm font-semibold text-white">v{note.version}</span>
+                  <span className="text-sm font-semibold text-[var(--text)]">v{note.version}</span>
                   <ReleaseNoteStatusBadge status={note.status} />
-                  <span className="text-xs text-[#9aa1ac]">{note.category}</span>
+                  <span className="text-xs text-[var(--text-dim)]">{note.category}</span>
                 </div>
-                <p className="text-sm text-[#9aa1ac]">{note.problemStatement}</p>
+                <p className="text-sm text-[var(--text-dim)]">{note.problemStatement}</p>
               </Link>
             ))}
           </div>
@@ -220,13 +220,13 @@ export function RequirementDetailPage() {
 function MetaField({ label, value, href }: { label: string; value: string | null; href?: string }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-xs font-medium text-[#9aa1ac]">{label}</span>
+      <span className="text-xs font-medium text-[var(--text-dim)]">{label}</span>
       {value && href ? (
-        <a href={href} target="_blank" rel="noopener noreferrer" className="truncate text-sm text-[#5b8cff] hover:underline">
+        <a href={href} target="_blank" rel="noopener noreferrer" className="truncate text-sm text-[var(--accent)] hover:underline">
           Open
         </a>
       ) : (
-        <span className="text-sm text-white">{value ?? "—"}</span>
+        <span className="text-sm text-[var(--text)]">{value ?? "—"}</span>
       )}
     </div>
   );
@@ -253,33 +253,33 @@ function CommentsSection({ requirement, onChange }: { requirement: RequirementRe
 
   return (
     <section>
-      <h2 className="mb-3 text-sm font-semibold text-[#9aa1ac]">Comments ({comments.length})</h2>
+      <h2 className="mb-3 text-sm font-semibold text-[var(--text-dim)]">Comments ({comments.length})</h2>
       <div className="mb-4 flex gap-2">
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder="Add a remark…"
           rows={2}
-          className="flex-1 rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
+          className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
         />
         <button
           onClick={submit}
           disabled={submitting || !body.trim()}
-          className="flex h-fit items-center gap-1.5 rounded-lg bg-[#5b8cff] px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+          className="flex h-fit items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
         >
           <Send size={14} />
         </button>
       </div>
       {comments.length === 0 ? (
-        <p className="text-sm text-[#9aa1ac]">No remarks yet.</p>
+        <p className="text-sm text-[var(--text-dim)]">No remarks yet.</p>
       ) : (
         <div className="flex flex-col gap-3">
           {comments.map((c) => (
-            <div key={c.id} className="rounded-xl border border-[#2a2f3a] bg-[#171a21] p-3">
-              <div className="mb-1 text-xs text-[#9aa1ac]">
+            <div key={c.id} className="rounded-xl border border-[var(--border)] bg-[var(--panel)] p-3">
+              <div className="mb-1 text-xs text-[var(--text-dim)]">
                 {c.author} · {new Date(c.createdAt).toLocaleString()}
               </div>
-              <p className="text-sm text-white">{c.body}</p>
+              <p className="text-sm text-[var(--text)]">{c.body}</p>
             </div>
           ))}
         </div>
@@ -325,21 +325,21 @@ function FigmaReferencesSection({
   return (
     <section className="mb-8">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-[#9aa1ac]">Figma references ({references.length})</h2>
+        <h2 className="text-sm font-semibold text-[var(--text-dim)]">Figma references ({references.length})</h2>
         <Button size="mini" variant="grey-outline" leftIcon={<Frame size={14} />} onClick={() => setShowForm((v) => !v)}>
           Attach design
         </Button>
       </div>
 
       {showForm && (
-        <div className="mb-3 rounded-xl border border-[#2a2f3a] bg-[#1e2229] p-4">
+        <div className="mb-3 rounded-xl border border-[var(--border)] bg-[var(--panel-2)] p-4">
           <input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="Paste a Figma file or frame URL"
-            className="w-full rounded-lg border border-[#2a2f3a] bg-[#171a21] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--panel)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
           />
-          {error && <p className="mt-2 text-xs text-[#e05a5a]">{error}</p>}
+          {error && <p className="mt-2 text-xs text-[var(--red)]">{error}</p>}
           <div className="mt-3 flex justify-end gap-2">
             <Button size="mini" variant="grey-outline" onClick={() => setShowForm(false)}>
               Cancel
@@ -352,11 +352,11 @@ function FigmaReferencesSection({
       )}
 
       {references.length === 0 ? (
-        <p className="text-sm text-[#9aa1ac]">No design references attached yet.</p>
+        <p className="text-sm text-[var(--text-dim)]">No design references attached yet.</p>
       ) : (
         <div className="flex flex-wrap gap-3">
           {references.map((ref) => (
-            <div key={ref.id} className="relative w-40 overflow-hidden rounded-xl border border-[#2a2f3a] bg-[#171a21]">
+            <div key={ref.id} className="relative w-40 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--panel)]">
               <IconButton
                 icon={<X size={12} />}
                 aria-label="Remove Figma reference"
@@ -369,11 +369,11 @@ function FigmaReferencesSection({
                 {ref.thumbnailUrl ? (
                   <img src={ref.thumbnailUrl} alt={ref.fileName ?? "Figma file"} className="h-24 w-full object-cover" />
                 ) : (
-                  <div className="flex h-24 w-full items-center justify-center text-[#9aa1ac]">
+                  <div className="flex h-24 w-full items-center justify-center text-[var(--text-dim)]">
                     <Frame size={20} />
                   </div>
                 )}
-                <div className="truncate px-2 py-1.5 text-xs text-[#9aa1ac]">{ref.fileName ?? ref.fileKey}</div>
+                <div className="truncate px-2 py-1.5 text-xs text-[var(--text-dim)]">{ref.fileName ?? ref.fileKey}</div>
               </a>
             </div>
           ))}
@@ -421,13 +421,13 @@ function LinkWorkItemForm({
   }
 
   return (
-    <div className="mb-3 rounded-xl border border-[#2a2f3a] bg-[#1e2229] p-4">
+    <div className="mb-3 rounded-xl border border-[var(--border)] bg-[var(--panel-2)] p-4">
       {mode === "existing" ? (
         <input
           value={adoId}
           onChange={(e) => setAdoId(e.target.value)}
           placeholder="PBI id, e.g. 12345"
-          className="w-full rounded-lg border border-[#2a2f3a] bg-[#171a21] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
+          className="w-full rounded-lg border border-[var(--border)] bg-[var(--panel)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
         />
       ) : (
         <div className="flex flex-col gap-2">
@@ -435,26 +435,26 @@ function LinkWorkItemForm({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Title for the new PBI"
-            className="w-full rounded-lg border border-[#2a2f3a] bg-[#171a21] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--panel)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
           />
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Description (optional)"
             rows={2}
-            className="w-full rounded-lg border border-[#2a2f3a] bg-[#171a21] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--panel)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
           />
         </div>
       )}
-      {error && <p className="mt-2 text-xs text-[#e05a5a]">{error}</p>}
+      {error && <p className="mt-2 text-xs text-[var(--red)]">{error}</p>}
       <div className="mt-3 flex justify-end gap-2">
-        <button onClick={onClose} className="rounded-lg px-3 py-1.5 text-xs text-[#9aa1ac] hover:text-white">
+        <button onClick={onClose} className="rounded-lg px-3 py-1.5 text-xs text-[var(--text-dim)] hover:text-[var(--text)]">
           Cancel
         </button>
         <button
           onClick={submit}
           disabled={submitting}
-          className="flex items-center gap-1 rounded-lg bg-[#5b8cff] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
+          className="flex items-center gap-1 rounded-lg bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50"
         >
           <Plus size={14} /> {mode === "existing" ? "Link" : "Create & link"}
         </button>

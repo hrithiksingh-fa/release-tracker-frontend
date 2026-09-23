@@ -39,13 +39,13 @@ export function ClientDetailPage() {
     }
   }
 
-  if (!client) return <div className="p-8 text-sm text-[#9aa1ac]">Loading…</div>;
+  if (!client) return <div className="p-8 text-sm text-[var(--text-dim)]">Loading…</div>;
 
   const phaseStages = client.phaseWorkflow?.stages ?? [];
 
   return (
     <div className="mx-auto max-w-6xl p-8">
-      <Link to="/" className="mb-4 inline-flex items-center gap-1 text-sm text-[#9aa1ac] hover:text-white">
+      <Link to="/" className="mb-4 inline-flex items-center gap-1 text-sm text-[var(--text-dim)] hover:text-[var(--text)]">
         <ArrowLeft size={14} /> All clients
       </Link>
 
@@ -58,14 +58,14 @@ export function ClientDetailPage() {
           <TimelineButton onClick={() => setShowTimeline(true)} />
           <button
             onClick={() => setShowEdit(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-[#2a2f3a] px-3 py-1.5 text-xs font-medium text-[#9aa1ac] hover:border-[#5b8cff] hover:text-white"
+            className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-dim)] hover:border-[var(--accent)] hover:text-[var(--text)]"
           >
             <Pencil size={14} /> Edit
           </button>
         </div>
       </div>
-      {client.description && <p className="mb-2 text-sm text-[#9aa1ac]">{client.description}</p>}
-      <p className="mb-6 text-sm text-[#9aa1ac]">
+      {client.description && <p className="mb-2 text-sm text-[var(--text-dim)]">{client.description}</p>}
+      <p className="mb-6 text-sm text-[var(--text-dim)]">
         {client.productOwner ? `Owner: ${client.productOwner}` : "No product owner"} ·{" "}
         {client.slackChannelName ? `Slack: #${client.slackChannelName}` : "No Slack channel"} ·{" "}
         {client.adoProjectUrl ? `ADO: ${client.adoProjectUrl}` : "ADO not configured"}
@@ -74,7 +74,7 @@ export function ClientDetailPage() {
       {client.modules && client.modules.length > 0 && (
         <div className="mb-6 flex flex-wrap gap-1.5">
           {client.modules.map((m) => (
-            <span key={m.id} className="rounded-full border border-[#2a2f3a] px-2.5 py-0.5 text-xs text-[#9aa1ac]">
+            <span key={m.id} className="rounded-full border border-[var(--border)] px-2.5 py-0.5 text-xs text-[var(--text-dim)]">
               {m.name}
             </span>
           ))}
@@ -82,12 +82,12 @@ export function ClientDetailPage() {
       )}
 
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-[#9aa1ac]">Phases</h2>
+        <h2 className="text-sm font-semibold text-[var(--text-dim)]">Phases</h2>
         <div className="flex items-center gap-2">
           <ViewToggle view={view} onChange={setView} />
           <button
             onClick={() => setShowCreatePhase(true)}
-            className="flex items-center gap-1 rounded-lg bg-[#5b8cff] px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90"
+            className="flex items-center gap-1 rounded-lg bg-[var(--accent)] px-3 py-1.5 text-sm font-semibold text-white hover:opacity-90"
           >
             <Plus size={14} /> Add phase
           </button>
@@ -95,30 +95,30 @@ export function ClientDetailPage() {
       </div>
 
       {error && (
-        <p className="mb-4 rounded-lg border border-[#e0a13a]/35 bg-[#e0a13a]/10 px-3 py-2 text-sm text-[#e0a13a]">
+        <p className="mb-4 rounded-lg border border-[var(--amber)]/35 bg-[var(--amber)]/10 px-3 py-2 text-sm text-[var(--amber)]">
           {error}
         </p>
       )}
 
       {phases.length === 0 ? (
-        <p className="text-sm text-[#9aa1ac]">No phases yet for this client.</p>
+        <p className="text-sm text-[var(--text-dim)]">No phases yet for this client.</p>
       ) : view === "list" ? (
-        <div className="divide-y divide-[#2a2f3a] rounded-xl border border-[#2a2f3a] bg-[#171a21]">
+        <div className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)] bg-[var(--panel)]">
           {phases.map((p) => (
             <Link
               key={p.id}
               to={`/phases/${p.id}`}
-              className="flex items-center justify-between px-4 py-3 hover:bg-white/5"
+              className="flex items-center justify-between px-4 py-3 hover:bg-[var(--hover-surface)]"
             >
               <div>
-                <span className="font-medium text-white">{p.name}</span>
+                <span className="font-medium text-[var(--text)]">{p.name}</span>
                 {p.deliveryDate && (
-                  <span className="ml-2 text-xs text-[#9aa1ac]">Due {new Date(p.deliveryDate).toLocaleDateString()}</span>
+                  <span className="ml-2 text-xs text-[var(--text-dim)]">Due {new Date(p.deliveryDate).toLocaleDateString()}</span>
                 )}
               </div>
               <div className="flex items-center gap-3">
                 {p.stage && <StageBadge name={p.stage.stage.name} color={p.stage.stage.color} />}
-                <span className="text-xs text-[#9aa1ac]">{p._count?.requirements ?? 0} requirement(s)</span>
+                <span className="text-xs text-[var(--text-dim)]">{p._count?.requirements ?? 0} requirement(s)</span>
               </div>
             </Link>
           ))}
@@ -131,8 +131,8 @@ export function ClientDetailPage() {
           onMove={movePhaseStage}
           renderCard={(p) => (
             <div onClick={() => navigate(`/phases/${p.id}`)}>
-              <div className="text-sm font-medium text-white">{p.name}</div>
-              <div className="mt-1 flex items-center gap-2 text-xs text-[#9aa1ac]">
+              <div className="text-sm font-medium text-[var(--text)]">{p.name}</div>
+              <div className="mt-1 flex items-center gap-2 text-xs text-[var(--text-dim)]">
                 {p.deliveryDate && <span>Due {new Date(p.deliveryDate).toLocaleDateString()}</span>}
                 <span>{p._count?.requirements ?? 0} req.</span>
               </div>
@@ -140,7 +140,7 @@ export function ClientDetailPage() {
           )}
         />
       ) : (
-        <p className="text-sm text-[#e05a5a]">This client has no phase workflow configured.</p>
+        <p className="text-sm text-[var(--red)]">This client has no phase workflow configured.</p>
       )}
 
       {showCreatePhase && (
@@ -170,11 +170,11 @@ export function ClientDetailPage() {
 
 function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode) => void }) {
   return (
-    <div className="flex overflow-hidden rounded-lg border border-[#2a2f3a]">
+    <div className="flex overflow-hidden rounded-lg border border-[var(--border)]">
       <button
         onClick={() => onChange("board")}
         className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${
-          view === "board" ? "bg-[#5b8cff]/15 text-[#5b8cff]" : "text-[#9aa1ac] hover:text-white"
+          view === "board" ? "bg-[var(--accent)]/15 text-[var(--accent)]" : "text-[var(--text-dim)] hover:text-[var(--text)]"
         }`}
       >
         <LayoutGrid size={14} /> Board
@@ -182,7 +182,7 @@ function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode
       <button
         onClick={() => onChange("list")}
         className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${
-          view === "list" ? "bg-[#5b8cff]/15 text-[#5b8cff]" : "text-[#9aa1ac] hover:text-white"
+          view === "list" ? "bg-[var(--accent)]/15 text-[var(--accent)]" : "text-[var(--text-dim)] hover:text-[var(--text)]"
         }`}
       >
         <List size={14} /> List
@@ -226,47 +226,46 @@ function CreatePhaseModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-md rounded-xl border border-[#2a2f3a] bg-[#171a21] p-6">
-        <h2 className="mb-4 text-base font-semibold text-white">New phase</h2>
+      <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--panel)] p-6">
+        <h2 className="mb-4 text-base font-semibold text-[var(--text)]">New phase</h2>
         <div className="flex flex-col gap-3">
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-[#9aa1ac]">Name</span>
+            <span className="text-xs font-medium text-[var(--text-dim)]">Name</span>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Onboarding, Scaling 1"
-              className="rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
+              className="rounded-lg border border-[var(--border)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-[#9aa1ac]">What this phase is about</span>
+            <span className="text-xs font-medium text-[var(--text-dim)]">What this phase is about</span>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
+              className="rounded-lg border border-[var(--border)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-xs font-medium text-[#9aa1ac]">Delivery date</span>
+            <span className="text-xs font-medium text-[var(--text-dim)]">Delivery date</span>
             <input
               type="date"
               value={deliveryDate}
               onChange={(e) => setDeliveryDate(e.target.value)}
-              className="rounded-lg border border-[#2a2f3a] bg-[#1e2229] px-3 py-2 text-sm text-white outline-none focus:border-[#5b8cff]"
-              style={{ colorScheme: "dark" }}
+              className="rounded-lg border border-[var(--border)] bg-[var(--panel-2)] px-3 py-2 text-sm text-[var(--text)] outline-none focus:border-[var(--accent)]"
             />
           </label>
         </div>
-        {error && <p className="mt-3 text-sm text-[#e05a5a]">{error}</p>}
+        {error && <p className="mt-3 text-sm text-[var(--red)]">{error}</p>}
         <div className="mt-5 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm text-[#9aa1ac] hover:text-white">
+          <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm text-[var(--text-dim)] hover:text-[var(--text)]">
             Cancel
           </button>
           <button
             onClick={submit}
             disabled={submitting || !name.trim()}
-            className="rounded-lg bg-[#5b8cff] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+            className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
           >
             {submitting ? "Creating…" : "Create"}
           </button>
